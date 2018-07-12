@@ -1,0 +1,11 @@
+if(SERVER) {
+	AddCSLuaFile();
+    AddCSLuaFile("luaa/luaa.lua");
+	AddCSLuaFile("luaa/luaa_objects.lua");
+	AddCSLuaFile("luaa/luaa_enumerable.lua");
+
+	AddCSLuaFile("scripty/core.lua");
+} 
+
+include("luaa/luaa.lua");
+include("scripty/core.lua"); 

@@ -1,0 +1,75 @@
+class SCRIPTY_GUI_MainWindow {
+    var MenuBar;
+    var VisualTree;
+
+    function Init() {  
+        this:__this();
+
+        this:SetScaleAndPosition();
+        this:MakePopup();
+
+        this:AddMenuBar();
+        this:AddVisualTree();
+    }
+
+    function Setup() {
+            
+    }
+
+    function SetScaleAndPosition() { 
+        this:SetSize(800, 600);
+        this:Center();
+    }
+
+    function AddMenuBar() {
+        this.MenuBar = this:Add("DMenuBar");
+        this.MenuBar:Dock(TOP);
+        this.MenuBar:DockMargin(-3, -6, -3, 0);
+
+        var scriptMenu = this.MenuBar:AddMenu("Script");
+
+        scriptMenu:AddOption("New", function() {
+            
+        }):SetIcon("icon16/page_add.png");
+    }
+
+    function AddVisualTree() {
+        this.VisualTree = this:Add("SCRIPTY_GUI_VisualTree");
+        this.VisualTree:Dock(FILL);
+        this.VisualTree:DockMargin(0, 3, 0, 0);
+    }
+
+    /*---------------------------- 
+        Events
+    ------------------------------*/
+
+
+}
+
+CSCRIPTY_GUI_MainWindow.__index = null;
+derma.DefineControl("SCRIPTY_GUI_MainWindow", "SCRIPTY_GUI_MainWindow",
+    CSCRIPTY_GUI_MainWindow, "DFrame");
+
+/*---------------------------- 
+    Opening the menu
+------------------------------*/
+
+if(IsValid(SCRIPTY_MainWindow))
+    SCRIPTY_MainWindow:Remove();
+
+function SCRIPTY.OpenMainWindow() {
+    if(IsValid(SCRIPTY_MainWindow))
+        SCRIPTY_MainWindow:Remove();
+
+
+    SCRIPTY_MainWindow = RACING2.VguiCreate("SCRIPTY_GUI_MainWindow");
+    SCRIPTY_MainWindow:Setup();
+}
+
+/*---------------------------- 
+    Testing
+------------------------------*/
+
+static if(DEBUG) {
+    SCRIPTY.OpenMainWindow();
+}

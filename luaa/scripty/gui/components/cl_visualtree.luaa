@@ -1,0 +1,400 @@
+class SCRIPTY_GUI_VisualTree {
+    var Nodes = { };
+
+    var Offset = { 0, 0 };
+    var Zoom = 1;
+
+    var Dragging;
+    var InitialOffset;
+
+    function Init() {  
+        this:__this();
+
+        this:SetMouseInputEnabled(true);
+
+        var node1 = this:AddNode();
+        node1:SetPos(50, 150);
+        var a = node1:AddInput({
+            Label = "A",
+        });
+        var b = node1:AddInput({
+            Label = "B",
+        });
+        var out = node1:AddOutput({
+            Label = "Output",
+        });
+
+        var node2 = this:AddNode();
+        node2:SetPos(400, 100);
+        var a2 = node2:AddInput({
+            Label = "A",
+        });
+        var b2 = node2:AddInput({
+            Label = "B",
+        });
+        var out2 = node2:AddOutput({
+            Label = "Output",
+        });
+
+        a2:Connect(out);
+    }
+
+    function OnRemove() {
+        foreach(var node in this.Nodes)
+            node:Remove();
+    }
+
+    function AddNode(node) {
+        var node = vgui.Create("SCRIPTY_GUI_Node");
+        node:Setup(this);
+        node:SetPaintedManually(true);
+        node:SetSize(200, 100);
+        this.Nodes[#this.Nodes + 1] = node;
+
+        return node;
+    }
+
+    function Setup() {
+        
+    }
+
+    function Paint(w, h) {
+        var screenX, screenY = this:LocalToScreen(0, 0);
+
+        render.SetScissorRect(screenX, screenY, screenX + w, screenY + h, true);
+        var matrix = Matrix();
+        // matrix:Translate(Vector(w / 2, h / 2, 0));
+        matrix:Translate(Vector(screenX, screenY, 0));
+        matrix:Translate(Vector(-w / 2, -h / 2, 0));
+        matrix:Scale(Vector(this.Zoom, this.Zoom, 1));
+        matrix:Translate(Vector(-this.Offset[1], -this.Offset[2], 0));
+        matrix:Translate(Vector(w / 2 / this.Zoom, h / 2 / this.Zoom, 0));
+        // matrix:Translate(Vector(-w / 2 / this.Zoom, -h / 2 / this.Zoom, 0));
+        cam.Start2D();
+        cam.PushModelMatrix(matrix);
+        var oldW, oldH = ScrW(), ScrH();
+
+        surface.DisableClipping(true);
+        DisableClipping(true);
+        this:PaintInside(w / this.Zoom, h / this.Zoom);
+        surface.DisableClipping(false);
+
+        render.SetViewPort(0, 0, oldW, oldH);
+        cam.PopModelMatrix();
+        cam.End2D();
+        render.SetScissorRect(0, 0, 0, 0, false);
+    }
+
+    function PaintInside(w, h) {
+        var offsetX, offsetY = unpack(this.Offset);
+
+        // Background
+
+        surface.SetDrawColor(50, 50, 50);
+        surface.DrawRect(offsetX, offsetY, w, h);
+
+        // Lines
+
+        var lineDistance = 100;
+
+        surface.SetDrawColor(70, 70, 70);
+
+        for(var y = math.floor(this.Offset[2] / lineDistance) * lineDistance; y < h + this.Offset[2]; y += lineDistance)
+            surface.DrawLine(this.Offset[1], y, this.Offset[1] + w, y);
+
+        for(var x = math.floor(this.Offset[1] / lineDistance) * lineDistance; x < w + this.Offset[1]; x += lineDistance)
+            surface.DrawLine(x, this.Offset[2], x, this.Offset[2] + h);
+
+        draw.SimpleText("X: " .. this.Offset[1], "default", 5 + offsetX, 5 + offsetY);
+        draw.SimpleText("Y: " .. this.Offset[2], "default", 5 + offsetX, 20 + offsetY);
+
+        // Nodes
+
+        foreach(var node in this.Nodes) {
+            var x, y = gui.MousePos(); 
+            
+            this:CheckHovered(node, x, y);
+
+            surface.DisableClipping(true);
+            DisableClipping(true);
+            node:PaintManual();
+        }
+
+        this:DrawConnections();
+    }
+
+    function DrawConnections() {
+        foreach(var node in this.Nodes) {
+            foreach(var input in node.InputsPanel:GetChildren()) {
+                var w, h = input:GetSize();
+                var sX, sY = input:LocalToScreen(5, h / 2);
+
+                var output = input.InputPanel;
+                if(output) {
+                    surface.SetDrawColor(255, 0, 0);
+                    // surface.DrawRect(sX - 2, sY - 2, 4, 4);
+
+                    surface.SetDrawColor(0, 255, 0);
+                    var iW, iH = output:GetSize();
+                    var iX, iY = output:LocalToScreen(iW - 8, iH / 2);
+                    // surface.DrawRect(iX - 2, iY - 2, 4, 4);
+
+                    surface.SetDrawColor(55, 155, 255);
+                    surface.DrawLine(iX, iY, sX, sY);
+                }
+            }
+        }
+
+        if(this.ConnectingNodeIo) {
+            var w, h = this.ConnectingNodeIo:GetSize();
+            var sX, sY;
+            if(this.ConnectingNodeIo.Type == SCRIPTY.IoType.Input)
+                sX, sY = this.ConnectingNodeIo:LocalToScreen(5, h / 2);
+            else
+                sX, sY = this.ConnectingNodeIo:LocalToScreen(w - 8, h / 2);
+
+            
+            var mX, mY = gui.MousePos();
+            var vX, vY = this:LocalToScreen(0, 0);
+            mX -= vX + this.Offset[1];
+            mY -= vY + this.Offset[2];
+
+            surface.SetDrawColor(55, 155, 255);
+            surface.DrawLine(sX, sY, mX, mY);
+        }
+    }
+
+    function OnMousePressed(key) {
+        if(this:CallPanelEvents("OnMousePressed", key)) {
+            return;
+        }
+
+        if(key == MOUSE_FIRST) {
+            this.Dragging = { gui.MousePos() };
+            this.InitialOffset = this.Offset;
+        }
+    }
+
+    function OnMouseReleased(key) {
+        this:EndNodeDrag();
+
+        if(!this.Dragging && this:CallPanelEvents("OnMouseReleased", key)) {
+            this:SetMouseInputEnabled(true);
+            return;
+        }
+
+        if(key == MOUSE_FIRST)
+            this.Dragging = null;
+    }
+
+    function OnMouseWheeled(delta) {
+        this.Zoom = math.Clamp(this.Zoom + delta * this.Zoom * 0.2, 0.1, 2);
+    }
+
+    function Think() {
+        this:UpdateDragging();
+        this:UpdateNodeDragging();
+    }
+
+    function UpdateDragging() {
+        if(this.Dragging) {
+            var initialX, initialY = unpack(this.Dragging);
+            var currentX, currentY = gui.MousePos();
+
+            this.Offset = {
+                math.max(0, this.InitialOffset[1] + (initialX - currentX) / this.Zoom),
+                math.max(0, this.InitialOffset[2] + (initialY - currentY) / this.Zoom),
+            };
+        }
+    }
+
+    /*---------------------------- 
+        Panel event handling
+    ------------------------------*/
+
+    function CallPanelEvents(eventName, ...) {
+        foreach(var node in this.Nodes) {
+            if(this:CallPanelEvent(node, eventName, ...))
+                return true;
+        }
+
+        return false;
+    }
+
+    function CallPanelEvent(panel, eventName, ...) {
+        if(!IsValid(panel) || !this:PointInsidePanel(panel, gui.MousePos())) 
+            return false;
+            
+        var handled = false;
+            
+        foreach(var child in panel:GetChildren()) {
+            // DLabel breaks mouse released event
+            if(child:GetName() != "DLabel" && this:CallPanelEvent(child, eventName, ...)) {
+                // handled = true;
+                // continue; 
+            }
+        }
+            
+        if(!handled && panel[eventName]) {
+            var func = panel[eventName];
+            func(panel, ...); 
+            return true;
+        }
+        
+        return false;
+    }
+
+    function CheckHovered(panel, x, y) {
+        panel._WasHovered = panel._Hovered;
+        panel._Hovered = this:PointInsidePanel(panel, x, y);
+        
+        panel.Hovered = panel._Hovered; 
+        
+        if(!panel._WasHovered && panel._Hovered) {
+            if(panel.OnCursorEntered)
+                panel:OnCursorEntered();
+        }
+        else if(panel._WasHovered && !panel._Hovered)  {
+            if(panel.OnCursorExited)
+                panel:OnCursorExited();
+        }
+                
+        foreach(var child in panel:GetChildren())
+            if(IsValid(child))
+                this:CheckHovered(child, x, y); 
+    }
+
+    function AbsolutePanelPos(panel) {
+        var treePosX, treePosY = this:LocalToScreen(0, 0);
+        var x, y = panel:GetPos();
+        x *= this.Zoom;
+        y *= this.Zoom;
+        x += treePosX;
+        y += treePosY;
+        x -= this.Offset[1] * this.Zoom;
+        y -= this.Offset[2] * this.Zoom;
+        var parents = this:GetParents(panel);
+        
+        foreach(var parent in parents) {
+            var parentX, parentY = parent:GetPos();
+            x = x + parentX * this.Zoom; 
+            y = y + parentY * this.Zoom; 
+        }
+        
+        return x, y;
+    }
+
+    function PointInsidePanel(panel, x, y) {
+        var panelX, panelY = this:AbsolutePanelPos(panel);
+        var panelWidth, panelHeight = panel:GetSize();
+        panelWidth *= this.Zoom;
+        panelHeight *= this.Zoom;
+        
+        return x > panelX && x < (panelX + panelWidth) &&
+            y > panelY && y < (panelY + panelHeight);	
+    }
+
+    function GetParents(panel) {
+        var parents = { };
+        var parent = panel:GetParent();
+        
+        while(parent) {
+            parents[#parents + 1] = parent;
+            parent = parent:GetParent();
+        }
+        
+        return parents;
+    }
+
+    /*---------------------------- 
+        Events
+    ------------------------------*/
+
+    function OnNodeSelected(nodePanel) {
+        foreach(var node in this.Nodes)
+            node.Selected = false;
+        
+        nodePanel.Selected = true;
+    }
+
+    var ConnectingNodeIo;
+
+    function OnNodeIoClick(nodeIo) {
+        if(!this.ConnectingNodeIo) {
+            // Disconnect when clicking an input
+            if(nodeIo.Type == SCRIPTY.IoType.Input)
+                nodeIo:Disconnect();
+
+            this.ConnectingNodeIo = nodeIo;
+        }
+        else {
+            if(this.ConnectingNodeIo == nodeIo)
+                this:EndConnect();
+            
+            // Disallow connecting to the same node
+            else if(this.ConnectingNodeIo.Node == nodeIo.Node)
+                return;
+
+            // Connect input to output
+            else if(this.ConnectingNodeIo.Type == SCRIPTY.IoType.Input &&
+                nodeIo.Type == SCRIPTY.IoType.Output) {
+                    this.ConnectingNodeIo:Connect(nodeIo);
+                    this:EndConnect();
+                }
+
+            // Connect output to input
+            else if(this.ConnectingNodeIo.Type == SCRIPTY.IoType.Output &&
+                nodeIo.Type == SCRIPTY.IoType.Input) {
+                    nodeIo:Connect(this.ConnectingNodeIo);
+                    this:EndConnect();
+                }
+        }
+    }
+
+    function EndConnect() {
+        this.ConnectingNodeIo = null;
+    }
+
+    /*---------------------------- 
+        Node dragging
+    ------------------------------*/
+
+    var DraggedNode;
+    var NodeDragStart;
+    var NodeDragInitialPos;
+
+    function BeginNodeDrag(nodePanel) {
+        this.DraggedNode = nodePanel;
+        this.NodeDragStart = { gui.MousePos() };
+        this.NodeDragInitialPos = { nodePanel:GetPos() };
+    }
+
+    function EndNodeDrag() {
+        this.DraggedNode = null;
+    }
+
+    function UpdateNodeDragging() {
+        if(!this.DraggedNode)
+            return;
+
+        var initialX, initialY = unpack(this.NodeDragStart);
+        var currentX, currentY = gui.MousePos();
+
+        this.DraggedNode:SetPos(
+            this.NodeDragInitialPos[1] - (initialX - currentX) / this.Zoom,
+            this.NodeDragInitialPos[2] - (initialY - currentY) / this.Zoom
+        );
+    }
+}
+
+CSCRIPTY_GUI_VisualTree.__index = null;
+derma.DefineControl("SCRIPTY_GUI_VisualTree", "SCRIPTY_GUI_VisualTree",
+    CSCRIPTY_GUI_VisualTree, "DPanel");
+
+/*---------------------------- 
+    Testing
+------------------------------*/
+
+static if(DEBUG) {
+    SCRIPTY.OpenMainWindow();
+}

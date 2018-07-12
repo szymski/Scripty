@@ -1,0 +1,122 @@
+class SCRIPTY_GUI_Node {
+    var VisualTree;
+
+    var InputsPanel;
+    var OutputsPanel;
+    var Selected = false;
+
+    function Init() {  
+        this:__this();
+
+        // this:NoClipping(true);
+        this:AddTitleBar();
+        this:AddIO();
+    }
+
+    function Setup(visualTree) {
+        this.VisualTree = visualTree;
+    }
+
+    function AddTitleBar() {
+        this.TitleBar = this:Add("DPanel");
+        this.TitleBar:Dock(TOP);
+        this.TitleBar:SetHeight(16);
+        this.TitleBar.Paint = (self, w, h) => {
+            surface.SetDrawColor(60, 60, 60);
+            surface.DrawRect(0, 0, w, h);
+        };
+
+        var label = this.TitleBar:Add("DLabel");
+        label:Dock(FILL);
+        label:SetText("Test Node");
+        label:DockMargin(4, 1, 0, 0);
+        label:SetContentAlignment(4);
+        label:SetMouseInputEnabled(false);
+        function label:OnFocusChanged(gained) {
+            if(gained)
+                this:FocusPrevious();
+        }
+
+        this.TitleBar.OnMousePressed = (p, key) => {
+            this.VisualTree:BeginNodeDrag(this);
+        };
+
+        this.TitleBar.OnMouseReleased = (p, key) => {
+            this.VisualTree:EndNodeDrag();
+        };
+    }
+
+    function AddIO() {
+        this.InputsPanel = this:Add("Panel");
+        this.InputsPanel:DockMargin(0, 2, 0, 0);
+        this.InputsPanel:Dock(LEFT);
+
+        this.OutputsPanel = this:Add("Panel");
+        this.OutputsPanel:DockMargin(0, 2, 0, 0);
+        this.OutputsPanel:Dock(FILL);
+    }
+
+    function AddInput(data) {
+        var io = this.InputsPanel:Add("SCRIPTY_GUI_NodeIO");
+        io:Dock(TOP);
+        io:SetupInput();
+        io:Setup({
+            Node = this,
+            Label = data.Label,
+        });
+
+        return io;
+    }
+
+    function AddOutput(data) {
+        var io = this.OutputsPanel:Add("SCRIPTY_GUI_NodeIO");
+        io:Dock(TOP);
+        io:SetupOutput();
+        io:Setup({
+            Node = this,
+            Label = data.Label,
+        });
+
+        return io;
+    }
+
+    function PerformLayout() {
+        this.InputsPanel:SetWidth(this:GetWide() / 2);
+    }
+
+    function Paint(w, h) {
+        surface.DisableClipping(true);
+        DisableClipping(true);
+
+        // Background
+
+        surface.SetDrawColor(30, 30, 30, 240);
+
+        if(this.Selected)
+            surface.SetDrawColor(40, 40, 40);
+
+        surface.DrawRect(0, 0, w, h);
+    }
+
+    function PaintOver(w, h) {
+        surface.SetDrawColor(80, 80, 80);
+        surface.DrawOutlinedRect(0, 0, w, h);
+    }
+
+    function OnMousePressed() {
+        this.VisualTree:OnNodeSelected(this);
+    }
+
+}
+
+CSCRIPTY_GUI_Node.__index = null;
+derma.DefineControl("SCRIPTY_GUI_Node", "SCRIPTY_GUI_Node",
+    CSCRIPTY_GUI_Node, "DPanel");
+
+/*---------------------------- 
+    Testing
+------------------------------*/
+
+static if(DEBUG) {
+    SCRIPTY.OpenMainWindow();
+}

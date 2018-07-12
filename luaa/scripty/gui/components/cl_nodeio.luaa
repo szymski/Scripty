@@ -1,0 +1,109 @@
+var ArrowIcon = Material("icon16/arrow_right.png", "unlitgeneric");
+
+SCRIPTY.IoType = {
+    Input = 1,
+    Output = 2,
+};
+
+class SCRIPTY_GUI_NodeIO {
+    var Hovered = false;
+
+    var Type;
+
+    var Node;
+    var Label;
+
+    /// The IO panel this panel is connected to.
+    var InputPanel;
+
+    function Init() {  
+        this:__this();
+
+        this:SetHeight(20);
+        this:DockPadding(2, 2, 2, 2);
+
+        this.Icon = this:Add("DPanel");
+        this.Icon:SetWidth(20);
+        this.Icon.Paint = (icon, w, h) => {
+            surface.SetDrawColor(255, 255, 0);
+            surface.SetMaterial(ArrowIcon);
+            surface.DisableClipping(true);
+            surface.DrawTexturedRectRotated(w / 2, h / 2, 16, 16, 0);
+        };
+
+        this.Label = this:Add("DLabel");
+        
+        this.Label:Dock(FILL);
+    }
+
+    /**
+        data: {
+            Label - name to display,
+            Name - name of the io,
+        }
+    */
+    function Setup(data) {
+        assert(data, "Data is null.");
+
+        this.Node = data.Node;
+        this.Label:SetText(data.Label);
+    }
+
+    function SetupInput() {
+        this.Type = SCRIPTY.IoType.Input;
+
+        this.Icon:Dock(LEFT);
+
+        this.Label:SetContentAlignment(4);
+        this.Label:DockMargin(4, 0, 0, 0);
+    }
+
+    function SetupOutput() {
+        this.Type = SCRIPTY.IoType.Output;
+
+        this.Icon:Dock(RIGHT);
+
+        this.Label:SetContentAlignment(6);
+        this.Label:DockMargin(0, 0, 4, 0);
+    }
+
+    function Paint(w, h) {
+        if(this.Hovered) {
+            surface.SetDrawColor(255, 255, 255, 10);
+            surface.DrawRect(0, 0, w, h);
+        }
+    }
+
+    function OnCursorEntered() {
+        this.Hovered = true;
+    }
+
+    function OnCursorExited() {
+        this.Hovered = false;
+    }
+
+    function OnMouseReleased(key) {
+        if(key == MOUSE_FIRST)
+            this.Node.VisualTree:OnNodeIoClick(this);
+    }
+
+    function Connect(other) {
+        this.InputPanel = other;
+    }
+
+    function Disconnect() {
+        this.InputPanel = null;
+    }
+}
+
+CSCRIPTY_GUI_NodeIO.__index = null;
+derma.DefineControl("SCRIPTY_GUI_NodeIO", "SCRIPTY_GUI_NodeIO",
+    CSCRIPTY_GUI_NodeIO, "Panel");
+
+/*---------------------------- 
+    Testing
+------------------------------*/
+
+static if(DEBUG) {
+    SCRIPTY.OpenMainWindow();
+}

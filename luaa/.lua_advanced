@@ -1,0 +1,23 @@
+{
+	"comment": [
+		"--[[",
+		"	Scripty",
+		"	",
+		"	%filename%",
+		"	%date% %time%",
+		"	Compiled using LuaAdv",
+		"	This file should not be modified.",
+		"	",
+		"	Copyright © %year% Szymon (Szymekk) Jankowski",
+		"	All Rights Reserved",
+		"	Steam: https://steamcommunity.com/id/szymski",
+		"]]"
+	],
+
+	"input_dir": ".",
+	"output_dir": "../lua/",
+	"docs_dir": "../docs/",
+	"includes": [
+		"scripty/global.luaa",
+	]
+}
