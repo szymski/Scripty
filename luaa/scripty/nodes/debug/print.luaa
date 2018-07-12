@@ -1,0 +1,12 @@
+SCRIPTY.Registry.RegisterNode({
+    Name = "Debug/Print",
+    Description = "Prints to the console",
+
+    IsRunnable = true,
+
+    Inputs = {
+        ["value"] = {
+            Name = "Value",
+        },
+    },
+});

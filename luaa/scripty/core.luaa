@@ -3,7 +3,7 @@ include("slib/core.lua");
 hook.Call("SCRIPTY_Reload"); // A hook used for clean-up
 
 SCRIPTYConfig = SCRIPTYConfig ?? { };
-SCRIPTY = { };
+SCRIPTY = SCRIPTY ?? { };
 
 /*----------------------------    
     Loading files
@@ -31,3 +31,4 @@ if(CLIENT) {
     SLib.Including.IncludeFilesRecursive("scripty/sh_*"); 
 } 
 
+SCRIPTY.Registry.LoadNodes();

@@ -12,31 +12,52 @@ class SCRIPTY_GUI_VisualTree {
 
         this:SetMouseInputEnabled(true);
 
-        var node1 = this:AddNode();
+        var node1 = this:AddNode("Events/OnStart");
         node1:SetPos(50, 150);
-        var a = node1:AddInput({
-            Label = "A",
-        });
-        var b = node1:AddInput({
-            Label = "B",
-        });
-        var out = node1:AddOutput({
-            Label = "Output",
-        });
 
-        var node2 = this:AddNode();
-        node2:SetPos(400, 100);
-        var a2 = node2:AddInput({
-            Label = "A",
-        });
-        var b2 = node2:AddInput({
-            Label = "B",
-        });
-        var out2 = node2:AddOutput({
-            Label = "Output",
-        });
+        var node2 = this:AddNode("Math/Add");
+        node2:SetPos(300, 300);
 
-        a2:Connect(out);
+        var node3 = this:AddNode("Debug/Print");
+        node3:SetPos(550, 150);
+
+        // var node1 = this:AddNode("Math/Add");
+        // node1:SetPos(50, 150);
+        // var a = node1:AddInput({
+        //     Label = "A",
+        // });
+        // var b = node1:AddInput({
+        //     Label = "B",
+        // });
+        // var out = node1:AddOutput({
+        //     Label = "Output",
+        // });
+
+        // var node2 = this:AddNode("Math/Add");
+        // node2:SetPos(400, 100);
+        // var a2 = node2:AddInput({
+        //     Label = "A",
+        // });
+        // var b2 = node2:AddInput({
+        //     Label = "B",
+        // });
+        // var out2 = node2:AddOutput({
+        //     Label = "Output",
+        // });
+
+        // var node2 = this:AddNode("Math/Add");
+        // node2:SetPos(400, 300);
+        // var a2 = node2:AddInput({
+        //     Label = "A",
+        // });
+        // var b2 = node2:AddInput({
+        //     Label = "B",
+        // });
+        // var out2 = node2:AddOutput({
+        //     Label = "Output",
+        // });
+
+        // a2:Connect(out);
     }
 
     function OnRemove() {
@@ -44,9 +65,11 @@ class SCRIPTY_GUI_VisualTree {
             node:Remove();
     }
 
-    function AddNode(node) {
+    function AddNode(name) {
+        assert(name, "name is null.");
+
         var node = vgui.Create("SCRIPTY_GUI_Node");
-        node:Setup(this);
+        node:Setup(this, name);
         node:SetPaintedManually(true);
         node:SetSize(200, 100);
         this.Nodes[#this.Nodes + 1] = node;
@@ -125,9 +148,9 @@ class SCRIPTY_GUI_VisualTree {
 
     function DrawConnections() {
         foreach(var node in this.Nodes) {
-            foreach(var input in node.InputsPanel:GetChildren()) {
+            foreach(var key, input in node.InputsPanel:GetChildren()) {
                 var w, h = input:GetSize();
-                var sX, sY = input:LocalToScreen(5, h / 2);
+                var sX, sY = input:LocalToScreen(12, h / 2);
 
                 var output = input.InputPanel;
                 if(output) {
@@ -136,11 +159,14 @@ class SCRIPTY_GUI_VisualTree {
 
                     surface.SetDrawColor(0, 255, 0);
                     var iW, iH = output:GetSize();
-                    var iX, iY = output:LocalToScreen(iW - 8, iH / 2);
+                    var iX, iY = output:LocalToScreen(iW - 12, iH / 2);
                     // surface.DrawRect(iX - 2, iY - 2, 4, 4);
 
                     surface.SetDrawColor(55, 155, 255);
-                    surface.DrawLine(iX, iY, sX, sY);
+                    if(input.Execution || input.Trigger)
+                        surface.SetDrawColor(255, 155, 55);
+
+                    this:DrawConnection(iX, iY, sX, sY);
                 }
             }
         }
@@ -149,19 +175,45 @@ class SCRIPTY_GUI_VisualTree {
             var w, h = this.ConnectingNodeIo:GetSize();
             var sX, sY;
             if(this.ConnectingNodeIo.Type == SCRIPTY.IoType.Input)
-                sX, sY = this.ConnectingNodeIo:LocalToScreen(5, h / 2);
+                sX, sY = this.ConnectingNodeIo:LocalToScreen(12, h / 2);
             else
-                sX, sY = this.ConnectingNodeIo:LocalToScreen(w - 8, h / 2);
+                sX, sY = this.ConnectingNodeIo:LocalToScreen(w - 12, h / 2);
 
             
             var mX, mY = gui.MousePos();
             var vX, vY = this:LocalToScreen(0, 0);
             mX -= vX + this.Offset[1];
             mY -= vY + this.Offset[2];
+            // TODO: Fix mouse position when zoomed.
 
             surface.SetDrawColor(55, 155, 255);
-            surface.DrawLine(sX, sY, mX, mY);
+            if(this.ConnectingNodeIo.Execution || this.ConnectingNodeIo.Trigger)
+                surface.SetDrawColor(255, 155, 55);
+
+            this:DrawConnection(sX, sY, mX, mY, true);
         }
+    }
+
+    /**
+        Draws a connection between two IOs.
+        The first IO should be an output.
+    */
+    function DrawConnection(startX, startY, endX, endY, straight) {
+        var length = 20;
+
+        if(straight) {
+            surface.DrawLine(startX, startY, endX , endY);
+        }
+        else /*if(startX < endX)*/ {
+            surface.DrawLine(startX, startY, startX + length, startY);
+            surface.DrawLine(startX + length, startY, endX - length, endY);
+            surface.DrawLine(endX, endY, endX - length, endY);
+         }
+        // else {
+        //     surface.DrawLine(startX, startY, startX - length, startY);
+        //     surface.DrawLine(startX - length, startY, endX + length, endY);
+        //     surface.DrawLine(endX, endY, endX + length, endY);
+        // }
     }
 
     function OnMousePressed(key) {
@@ -335,6 +387,10 @@ class SCRIPTY_GUI_VisualTree {
             else if(this.ConnectingNodeIo.Node == nodeIo.Node)
                 return;
 
+            // Disallow connecting execution to non-execution
+            else if(this.ConnectingNodeIo.Execution != nodeIo.Execution)
+                return;
+
             // Connect input to output
             else if(this.ConnectingNodeIo.Type == SCRIPTY.IoType.Input &&
                 nodeIo.Type == SCRIPTY.IoType.Output) {
@@ -345,6 +401,7 @@ class SCRIPTY_GUI_VisualTree {
             // Connect output to input
             else if(this.ConnectingNodeIo.Type == SCRIPTY.IoType.Output &&
                 nodeIo.Type == SCRIPTY.IoType.Input) {
+                    this.ConnectingNodeIo:Disconnect();
                     nodeIo:Connect(this.ConnectingNodeIo);
                     this:EndConnect();
                 }

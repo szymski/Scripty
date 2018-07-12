@@ -1,0 +1,6 @@
+SCRIPTY.Registry.RegisterNode({
+    Name = "Events/OnStart",
+    Description = "Called as soon as the script is loaded.",
+
+    IsEvent = true,
+});

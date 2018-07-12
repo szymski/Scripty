@@ -1,0 +1,35 @@
+SCRIPTY.Registry = SCRIPTY.Registry ?? { };
+
+SCRIPTY.Registry.Nodes = SCRIPTY.Registry.Nodes ?? { };
+SCRIPTY.Registry.NodesByName = { };
+
+/**
+    Loads nodes from the nodes directory.
+*/
+function SCRIPTY.Registry.LoadNodes() {
+    print("[SCRIPTY] Loading nodes");
+
+    SCRIPTY.Registry.Nodes = { };
+    SCRIPTY.Registry.NodesByName = { };
+
+    SLib.Including.FindFilesRecursive("scripty/nodes/*", name => {
+        AddCSLuaFile(name);
+        include(name);
+    });
+}
+
+/**
+    Registers a node.
+*/
+function SCRIPTY.Registry.RegisterNode(tbl) {
+    assert(tbl, "Invalid table.");
+    assert(tbl.Name, "No name provided.");
+
+    var parts = string.Explode("/", tbl.Name);
+    tbl.Title = parts[#parts];
+
+    SCRIPTY.Registry.Nodes[#SCRIPTY.Registry.Nodes + 1] = tbl;
+    SCRIPTY.Registry.NodesByName[tbl.Name] = tbl;
+
+    print("[SCRIPTY] Added node: " .. tbl.Name);
+}

@@ -28,9 +28,9 @@ class SCRIPTY_GUI_MainWindow {
 
         var scriptMenu = this.MenuBar:AddMenu("Script");
 
-        scriptMenu:AddOption("New", function() {
+        scriptMenu:AddOption("Run", function() {
             
-        }):SetIcon("icon16/page_add.png");
+        }):SetIcon("icon16/control_play.png");
     }
 
     function AddVisualTree() {

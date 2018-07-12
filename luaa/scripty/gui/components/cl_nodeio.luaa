@@ -12,9 +12,15 @@ class SCRIPTY_GUI_NodeIO {
 
     var Node;
     var Label;
+    /// Determines whether this io is a part of a trigger.
+    var Trigger;
+    /// Determines whether this io is a part of execution control.
+    var Execution;
 
     /// The IO panel this panel is connected to.
     var InputPanel;
+    /// The IO panels this panel is connected to.
+    var OutputPanels = { };
 
     function Init() {  
         this:__this();
@@ -25,10 +31,23 @@ class SCRIPTY_GUI_NodeIO {
         this.Icon = this:Add("DPanel");
         this.Icon:SetWidth(20);
         this.Icon.Paint = (icon, w, h) => {
-            surface.SetDrawColor(255, 255, 0);
-            surface.SetMaterial(ArrowIcon);
-            surface.DisableClipping(true);
-            surface.DrawTexturedRectRotated(w / 2, h / 2, 16, 16, 0);
+            // surface.SetDrawColor(255, 255, 0);
+            // surface.SetMaterial(ArrowIcon);
+            // surface.DrawTexturedRectRotated(w / 2, h / 2, 16, 16, 0);
+
+            var size = 10;
+
+            surface.SetDrawColor(55, 155, 255);
+                if(this.Execution || this.Trigger)
+                    surface.SetDrawColor(255, 155, 55);
+
+            if(!this.InputPanel && #this.OutputPanels == 0) {
+                surface.DrawOutlinedRect(w / 2 - size / 2, h / 2 - size / 2, size, size);
+            }
+            else
+            {
+                surface.DrawRect(w / 2 - size / 2, h / 2 - size / 2, size, size);
+            }
         };
 
         this.Label = this:Add("DLabel");
@@ -47,6 +66,8 @@ class SCRIPTY_GUI_NodeIO {
 
         this.Node = data.Node;
         this.Label:SetText(data.Label);
+        this.Trigger = data.Trigger;
+        this.Execution = data.Execution;
     }
 
     function SetupInput() {
@@ -88,10 +109,20 @@ class SCRIPTY_GUI_NodeIO {
     }
 
     function Connect(other) {
+        assert(this.Type == SCRIPTY.IoType.Input, "Only input io can be connected to other io.");
+
+        if(this.InputPanel == other)
+            return;
+
         this.InputPanel = other;
+        table.insert(this.InputPanel.OutputPanels, this);
     }
 
     function Disconnect() {
+        if(this.InputPanel) {
+            table.RemoveByValue(this.InputPanel.OutputPanels, this);
+        }
+
         this.InputPanel = null;
     }
 }

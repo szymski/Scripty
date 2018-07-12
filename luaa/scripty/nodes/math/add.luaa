@@ -1,0 +1,22 @@
+SCRIPTY.Registry.RegisterNode({
+    Name = "Math/Add",
+    Description = "Adds two numbers",
+
+    Inputs = {
+        ["a"] = {
+            Name = "A",
+            Type = "number",
+        },
+        ["b"] = {
+            Name = "B",
+            Type = "number",
+        }
+    },
+
+    Outputs = {
+        ["out"] = {
+            Name = "Out",
+            Type = "number",
+        },
+    },
+});

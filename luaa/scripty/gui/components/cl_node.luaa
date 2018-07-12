@@ -5,6 +5,8 @@ class SCRIPTY_GUI_Node {
     var OutputsPanel;
     var Selected = false;
 
+    var NodeTable;
+
     function Init() {  
         this:__this();
 
@@ -13,8 +15,57 @@ class SCRIPTY_GUI_Node {
         this:AddIO();
     }
 
-    function Setup(visualTree) {
+    function Setup(visualTree, nodeName) {
+        assert(visualTree, "visualTree is null.");
+        assert(nodeName, "nodeName is null.");
+
         this.VisualTree = visualTree;
+        this.NodeTable = SCRIPTY.Registry.NodesByName[nodeName];
+        assert(this.NodeTable, "No such node " .. nodeName);
+
+        this.TitleBar.Label:SetText(this.NodeTable.Title);
+
+        if(this.NodeTable.IsEvent) {
+            // this:AddInput({
+            //     Name = "active",
+            //     Label = "Active",
+            // });
+
+            this:AddOutput({
+                Name = "triggered",
+                Label = "Triggered",
+                Trigger = true,
+                Execution = true,
+            });
+        }
+
+        if(this.NodeTable.IsRunnable) {
+            this:AddInput({
+                Name = "run",
+                Label = "Run",
+                Execution = true,
+            });
+
+            this:AddOutput({
+                Name = "done",
+                Label = "Done",
+                Execution = true,
+            });
+        }
+
+        if(this.NodeTable.Inputs)
+            foreach(var key, input in this.NodeTable.Inputs) 
+                this:AddInput({
+                    Name = key,
+                    Label = input.Name,
+                });
+        
+        if(this.NodeTable.Outputs)
+            foreach(var key, output in this.NodeTable.Outputs) 
+                this:AddOutput({
+                    Name = key,
+                    Label = output.Name,
+                });
     }
 
     function AddTitleBar() {
@@ -26,13 +77,13 @@ class SCRIPTY_GUI_Node {
             surface.DrawRect(0, 0, w, h);
         };
 
-        var label = this.TitleBar:Add("DLabel");
-        label:Dock(FILL);
-        label:SetText("Test Node");
-        label:DockMargin(4, 1, 0, 0);
-        label:SetContentAlignment(4);
-        label:SetMouseInputEnabled(false);
-        function label:OnFocusChanged(gained) {
+        this.TitleBar.Label = this.TitleBar:Add("DLabel");
+        this.TitleBar.Label:Dock(FILL);
+        this.TitleBar.Label:SetText("Test Node");
+        this.TitleBar.Label:DockMargin(4, 1, 0, 0);
+        this.TitleBar.Label:SetContentAlignment(4);
+        this.TitleBar.Label:SetMouseInputEnabled(false);
+        function this.TitleBar.Label:OnFocusChanged(gained) {
             if(gained)
                 this:FocusPrevious();
         }
@@ -63,6 +114,8 @@ class SCRIPTY_GUI_Node {
         io:Setup({
             Node = this,
             Label = data.Label,
+            Trigger = data.Trigger,
+            Execution = data.Execution,
         });
 
         return io;
@@ -75,6 +128,8 @@ class SCRIPTY_GUI_Node {
         io:Setup({
             Node = this,
             Label = data.Label,
+            Trigger = data.Trigger,
+            Execution = data.Execution,
         });
 
         return io;
