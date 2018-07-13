@@ -1,4 +1,6 @@
 class SCRIPTY_GUI_VisualTree {
+    var MainWindow;
+
     var Nodes = { };
 
     var Offset = { 0, 0 };
@@ -17,6 +19,8 @@ class SCRIPTY_GUI_VisualTree {
 
         var node2 = this:AddNode("Math/Add");
         node2:SetPos(300, 300);
+        node2:GetInput("a"):SetValue(2);
+        node2:GetInput("b"):SetValue(3);
 
         var node3 = this:AddNode("Debug/Print");
         node3:SetPos(550, 150);
@@ -24,8 +28,8 @@ class SCRIPTY_GUI_VisualTree {
         var node4 = this:AddNode("Number 5");
         node4:SetPos(50, 300);
 
-        // node3:GetInput("run"):Connect(node1:GetOutput("triggered"));
-        // node3:GetInput("value"):Connect(node2:GetOutput("out"));
+        node3:GetInput("run"):Connect(node1:GetOutput("triggered"));
+        node3:GetInput("value"):Connect(node2:GetOutput("out"));
 
         // var node1 = this:AddNode("Math/Add");
         // node1:SetPos(50, 150);
@@ -83,8 +87,9 @@ class SCRIPTY_GUI_VisualTree {
         return node;
     }
 
-    function Setup() {
-        
+    function Setup(mainWindow) {
+        assert(mainWindow, "mainWindow is null.");
+        this.MainWindow = mainWindow;
     }
 
     function Paint(w, h) {
@@ -388,6 +393,8 @@ class SCRIPTY_GUI_VisualTree {
             node.Selected = false;
         
         nodePanel.Selected = true;
+
+        this.MainWindow.PropertyView:SelectNode(nodePanel);
     }
 
     var ConnectingNodeIo;

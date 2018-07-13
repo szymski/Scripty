@@ -46,6 +46,7 @@ class SCRIPTY_GUI_Node {
                 this:AddInput({
                     Name = key,
                     Label = input.Name,
+                    Type = input.Type,
                     Required = input.Required,
                 });
         
@@ -54,6 +55,7 @@ class SCRIPTY_GUI_Node {
                 this:AddOutput({
                     Name = key,
                     Label = output.Name,
+                    Type = input.Type,
                     Required = output.Required,
                 });
     }
@@ -105,6 +107,7 @@ class SCRIPTY_GUI_Node {
             Node = this,
             Name = data.Name,
             Label = data.Label,
+            Type = data.Type,
             Trigger = data.Trigger,
             Execution = data.Execution,
             Required = data.Required,
@@ -119,8 +122,9 @@ class SCRIPTY_GUI_Node {
         io:SetupOutput();
         io:Setup({
             Node = this,
-            Label = data.Label,
             Name = data.Name,
+            Label = data.Label,
+            Type = data.Type,
             Trigger = data.Trigger,
             Execution = data.Execution,
             Required = data.Required,

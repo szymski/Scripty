@@ -13,6 +13,8 @@ class SCRIPTY_GUI_NodeIO {
     var Node;
     var Name;
     var Label;
+    /// Type of the value the io holds.
+    var ValueType;
     /// Determines whether this io is a part of a trigger.
     var Trigger;
     /// Determines whether this io is a part of execution control.
@@ -23,6 +25,8 @@ class SCRIPTY_GUI_NodeIO {
     var InputPanel;
     /// The IO panels this panel is connected to.
     var OutputPanels = { };
+
+    var Value;
 
     function Init() {  
         this:__this();
@@ -43,7 +47,7 @@ class SCRIPTY_GUI_NodeIO {
                 if(this.Execution || this.Trigger)
                     surface.SetDrawColor(255, 155, 55);
 
-            if(!this.InputPanel && #this.OutputPanels == 0) {
+            if(!this.InputPanel && #this.OutputPanels == 0 && !this.Value) {
                 if(this.Required)
                     surface.SetDrawColor(255, 55, 55);
 
@@ -51,6 +55,9 @@ class SCRIPTY_GUI_NodeIO {
             }
             else
             {
+                if(this.Value)
+                    surface.SetDrawColor(55, 200, 55);
+
                 surface.DrawRect(w / 2 - size / 2, h / 2 - size / 2, size, size);
             }
         };
@@ -72,6 +79,7 @@ class SCRIPTY_GUI_NodeIO {
         this.Node = data.Node;
         this.Name = data.Name;
         this.Label:SetText(data.Label);
+        this.ValueType = data.Type;
         this.Trigger = data.Trigger;
         this.Execution = data.Execution;
         this.Required = data.Required;
@@ -125,6 +133,8 @@ class SCRIPTY_GUI_NodeIO {
         if(this.InputPanel == other)
             return;
 
+        this.Value = null;
+
         this.InputPanel = other;
         table.insert(this.InputPanel.OutputPanels, this);
     }
@@ -141,6 +151,11 @@ class SCRIPTY_GUI_NodeIO {
         surface.SetFont(this.Label:GetFont());
         var w, h = surface.GetTextSize(this.Label:GetText());
         return w + 20 + 2 * 2 + 10;
+    }
+
+    function SetValue(value) {
+        this:Disconnect();
+        this.Value = value;
     }
 }
 

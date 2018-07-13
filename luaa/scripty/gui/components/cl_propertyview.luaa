@@ -1,0 +1,107 @@
+class SCRIPTY_GUI_PropertyView {
+    var Title;
+    var Description;
+    var Properties;
+
+    var Node;
+
+    function Init() {  
+        this:__this();
+
+        this:AddLabelAndDescription();
+        this:CreateProperties();
+    }
+
+    function Setup() {
+        
+    }
+
+    function AddLabelAndDescription() {
+        this.Title = this:Add("DLabel");
+        this.Title:SetText("");
+        this.Title:SetColor(Color(0, 0, 0));
+        this.Title:SetFont("Trebuchet24");
+        this.Title:Dock(TOP);
+        this.Title:DockMargin(4, 4, 4, 4);
+        this.Title:SizeToContentsY();
+
+        this.Description = this:Add("DLabel");
+        this.Description:SetText("");
+        this.Description:SetColor(Color(0, 0, 0));
+        this.Description:Dock(TOP);
+        this.Description:DockMargin(6, 0, 6, 4);
+        this.Description:SetWrap(true);
+        this.Description:SetContentAlignment(7);
+        this.Description:SizeToContentsY();
+    }
+
+    function SelectNode(nodePanel) {
+        this.Node = nodePanel;
+
+        this.Title:SetText(this.Node.NodeTable.Name);
+        this.Description:SetText(this.Node.NodeTable.Description ?? "No description.");
+        timer.Simple(0.05, function() {
+            this.Title:SizeToContentsY();
+            this.Description:SizeToContentsY();
+        });
+
+        this:CreateProperties();
+    }
+
+    function CreateProperties() {
+        if(!this.Node)
+            return;
+
+        if(IsValid(this.Properties))
+            this.Properties:Remove();
+
+        this.Properties = this:Add("DProperties");
+        this.Properties:Dock(FILL);
+
+        foreach(var io in this.Node.InputsPanel:GetChildren()) {
+            var row = this.Properties:CreateRow("Inputs", io.Label:GetText());
+            row.Name = io.Name;
+            this:SetupRow(row, io);
+            row.DataChanged = (_, value) => {
+                var parsed = this:ParseValue(value, io.ValueType);
+
+                io:SetValue(parsed);
+            };
+        }
+    }
+
+    function SetupRow(row, io) {
+        row:Setup("Generic");
+
+        if(io.Value) {
+            row:SetValue(("" .. io.Value) ?? "null");
+        }
+        else {
+            if(io.InputPanel)
+                row:SetValue("connected");
+            else
+                row:SetValue("");
+        }
+    }
+
+    function ParseValue(value, type) {
+        if(type == "number")
+            return tonumber(value);
+        else if(type == "string")
+            return value;
+        else if(!type)
+            return value;
+    }
+}
+
+CSCRIPTY_GUI_PropertyView.__index = null;
+derma.DefineControl("SCRIPTY_GUI_PropertyView", "SCRIPTY_GUI_PropertyView",
+    CSCRIPTY_GUI_PropertyView, "DPanel");
+
+/*---------------------------- 
+    Testing
+------------------------------*/
+
+static if(DEBUG) {
+    SCRIPTY.OpenMainWindow();
+}

@@ -1,6 +1,7 @@
 class SCRIPTY_GUI_MainWindow {
     var MenuBar;
     var VisualTree;
+    var PropertyView;
 
     function Init() {  
         this:__this();
@@ -10,6 +11,7 @@ class SCRIPTY_GUI_MainWindow {
 
         this:AddMenuBar();
         this:AddVisualTree();
+        this:AddPropertyView();
     }
 
     function Setup() {
@@ -37,8 +39,15 @@ class SCRIPTY_GUI_MainWindow {
 
     function AddVisualTree() {
         this.VisualTree = this:Add("SCRIPTY_GUI_VisualTree");
+        this.VisualTree:Setup(this);
         this.VisualTree:Dock(FILL);
         this.VisualTree:DockMargin(0, 3, 0, 0);
+    }
+
+    function AddPropertyView() {
+        this.PropertyView = this:Add("SCRIPTY_GUI_PropertyView");
+        this.PropertyView:Dock(RIGHT);
+        this.PropertyView:SetWidth(300);
     }
 
     /*---------------------------- 
