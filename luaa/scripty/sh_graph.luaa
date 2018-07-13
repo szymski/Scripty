@@ -1,0 +1,201 @@
+/**
+    Represents a graph of nodes that can be executed.
+*/
+class SCRIPTY_Graph {
+    var Nodes = { };
+    var NodesById = { };
+
+    /// Number of executable node executions. Used to cache the values.
+    var Executions = 0;
+
+    function Run() {
+        print("Running graph");
+        this:InitContexts();
+        this:TriggerEvent("Events/OnStart");
+    }
+
+    function InitContexts() {
+        this.Executions = 0;
+
+        foreach(var node in this.Nodes) {
+            node.Context = SCRIPTY_NodeContext(node.NodeTable);
+        }
+    }
+
+    function TriggerEvent(name) {
+        print("Triggering event " .. name);
+
+        foreach(var node in this.Nodes) {
+            if(node.Name == name) {
+                this:TriggerExecutionOutput(node, "triggered");
+            }
+        }
+    }
+
+    function TriggerExecutionOutput(node, name) {
+        print("Triggering execution output '" .. name .. "' on node " .. node.Id);
+
+        if(!node.Outputs[name])
+            return;
+
+        foreach(var output in node.Outputs[name]) {
+            var secondNode = this.NodesById[output.Id];
+            this:TriggerExecutionInput(secondNode, output.Name);
+        }
+    }
+
+    function TriggerExecutionInput(node, name) {
+        assert(name == "run", "Execution input must be 'run'.");
+
+        print("Triggering execution input '" .. name .. "' on node " .. node.Id);
+
+        this.Executions++;
+        
+        this:UpdateNodeInputs(node);
+        node.NodeTable.Run(node.Context);
+    }
+
+    function UpdateNodeInputs(node) {
+        var context = node.Context;
+
+        // Don't update the node if it already was updated in this execution
+        if(context.LastExecution == this.Executions)
+            return;
+        context.LastExecution = this.Executions;
+
+        print("Updating node inputs on " .. node.Id);
+
+        foreach(var key, input in node.Inputs) {
+            var inputNode = this.NodesById[input.Id];
+            this:UpdateNodeInputs(inputNode);
+            context:SetInput(key, inputNode.Context:GetOutput(input.Name));
+        }
+
+        if(!node.NodeTable.IsRunnable && node.NodeTable.Run) {
+            node.NodeTable.Run(node.Context);
+        }
+    }
+}
+
+/*---------------------------- 
+    Node Context
+------------------------------*/
+
+/**
+    Represents a context of a node in a running graph.
+    The context is used to call next nodes and read/modify io values.
+*/
+class SCRIPTY_NodeContext {
+    var NodeTable;
+
+    var LastExecution = -1;
+    var Inputs = { };
+    var Outputs = { };
+
+    function this(nodeTable) {
+        this.NodeTable = nodeTable;
+    }
+
+    function SetInput(name, value) {
+        this.Inputs[name] = value;
+    }
+
+    function GetInput(name, def) {
+        if(!this.Inputs[name])
+            return def;
+
+        return this.Inputs[name];
+    }
+
+    function SetOutput(name, value) {
+        this.Outputs[name] = value;
+    }
+
+    function GetOutput(name, def) {
+        if(!this.Outputs[name])
+            return def;
+
+        return this.Outputs[name];
+    }
+}
+
+/*---------------------------- 
+    Building
+------------------------------*/
+
+if(CLIENT)
+function SCRIPTY.BuildGraph(nodePanels) {
+    var graph = SCRIPTY_Graph();
+
+    var lastId = 0;
+    var panelIdLookup = { };
+    var panelsById = { };
+
+    // Assign ids to nodes
+
+    foreach(var node in nodePanels) {
+        if(!panelIdLookup[node]) {
+            panelIdLookup[node] = ++lastId;
+            panelsById[lastId] = node;
+        }
+    }
+
+    // Populate node list
+
+    graph.Nodes = { };
+    graph.NodesById = { };
+
+    foreach(var node in nodePanels) {
+        var nodeTbl = {
+            Id = panelIdLookup[node],
+            Name = node.NodeTable.Name,
+            NodeTable = node.NodeTable,
+            Inputs = { },
+            Outputs = { },
+        };
+
+        graph.Nodes[#graph.Nodes + 1] = nodeTbl;
+        graph.NodesById[panelIdLookup[node]] = nodeTbl;
+    }
+
+    // Update connections
+
+    foreach(var node in nodePanels) {
+        var nodeTbl = graph.NodesById[panelIdLookup[node]];
+
+        if(nodeTbl.NodeTable.Inputs) {
+            var inputs = table.Copy(nodeTbl.NodeTable.Inputs);
+
+            if(nodeTbl.NodeTable.IsRunnable)
+                inputs["run"] = {
+                    Name = "Run",
+                    Execution = true,
+                };
+
+            foreach(var name, value in inputs) {
+                var inputIo = node:GetInput(name);
+
+                if(inputIo && inputIo.InputPanel) {
+                    var outputIo = inputIo.InputPanel;
+                    
+                    nodeTbl.Inputs[name] = {
+                        Id = panelIdLookup[outputIo.Node],
+                        Name = inputIo.InputPanel.Name,
+                    };
+
+                    var outputNode = graph.NodesById[panelIdLookup[outputIo.Node]];
+                    
+                    if(!outputNode.Outputs[outputIo.Name])
+                        outputNode.Outputs[outputIo.Name] = { };
+
+                    outputNode.Outputs[outputIo.Name][#outputNode.Outputs[outputIo.Name] + 1] = {
+                        Id = nodeTbl.Id,
+                        Name = inputIo.Name,
+                    };
+                }
+            }
+        }
+    }
+
+    return graph;
+}

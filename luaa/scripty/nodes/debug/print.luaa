@@ -9,4 +9,8 @@ SCRIPTY.Registry.RegisterNode({
             Name = "Value",
         },
     },
+
+    Run = context => {
+        print(context:GetInput("value"));
+    }
 });

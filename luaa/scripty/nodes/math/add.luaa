@@ -19,4 +19,8 @@ SCRIPTY.Registry.RegisterNode({
             Type = "number",
         },
     },
+
+    Run = context => {
+        context:SetOutput("out", context:GetInput("a") + context:GetInput("b"));
+    },
 });

@@ -21,6 +21,12 @@ class SCRIPTY_GUI_VisualTree {
         var node3 = this:AddNode("Debug/Print");
         node3:SetPos(550, 150);
 
+        var node4 = this:AddNode("Number 5");
+        node4:SetPos(50, 300);
+
+        node3:GetInput("run"):Connect(node1:GetOutput("triggered"));
+        node3:GetInput("value"):Connect(node2:GetOutput("out"));
+
         // var node1 = this:AddNode("Math/Add");
         // node1:SetPos(50, 150);
         // var a = node1:AddInput({
@@ -441,6 +447,13 @@ class SCRIPTY_GUI_VisualTree {
             this.NodeDragInitialPos[1] - (initialX - currentX) / this.Zoom,
             this.NodeDragInitialPos[2] - (initialY - currentY) / this.Zoom
         );
+    }
+
+    /**
+        Builds and returns an instance of SCRIPTY_Graph.
+    */
+    function BuildExecutableGraph() {
+        return SCRIPTY.BuildGraph(this.Nodes);
     }
 }
 

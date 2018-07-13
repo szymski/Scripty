@@ -29,7 +29,9 @@ class SCRIPTY_GUI_MainWindow {
         var scriptMenu = this.MenuBar:AddMenu("Script");
 
         scriptMenu:AddOption("Run", function() {
-            
+            var graph = this.VisualTree:BuildExecutableGraph();
+            PrintTable(graph);
+            graph:Run();
         }):SetIcon("icon16/control_play.png");
     }
 

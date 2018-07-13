@@ -11,6 +11,7 @@ class SCRIPTY_GUI_NodeIO {
     var Type;
 
     var Node;
+    var Name;
     var Label;
     /// Determines whether this io is a part of a trigger.
     var Trigger;
@@ -65,6 +66,7 @@ class SCRIPTY_GUI_NodeIO {
         assert(data, "Data is null.");
 
         this.Node = data.Node;
+        this.Name = data.Name;
         this.Label:SetText(data.Label);
         this.Trigger = data.Trigger;
         this.Execution = data.Execution;

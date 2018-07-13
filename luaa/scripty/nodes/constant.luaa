@@ -1,0 +1,15 @@
+SCRIPTY.Registry.RegisterNode({
+    Name = "Number 5",
+    Description = "Adds two numbers",
+
+    Outputs = {
+        ["out"] = {
+            Name = "Out",
+            Type = "number",
+        },
+    },
+
+    Run = context => {
+        context:SetOutput("out", 5);
+    },
+});
