@@ -3,4 +3,10 @@ SCRIPTY.Registry.RegisterNode({
     Description = "Called as soon as the script is loaded.",
 
     IsEvent = true,
+
+    OutTriggers = {
+        ["triggered"] = {
+            Name = "Triggered",
+        },
+    }
 });

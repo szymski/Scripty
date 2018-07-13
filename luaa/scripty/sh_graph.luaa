@@ -45,14 +45,12 @@ class SCRIPTY_Graph {
     }
 
     function TriggerExecutionInput(node, name) {
-        assert(name == "run", "Execution input must be 'run'.");
-
         print("Triggering execution input '" .. name .. "' on node " .. node.Id);
 
         this.Executions++;
         
         this:UpdateNodeInputs(node);
-        node.NodeTable.Run(node.Context);
+        node.NodeTable.InTriggers[name].Action(node.Context);
     }
 
     function UpdateNodeInputs(node) {
@@ -71,7 +69,7 @@ class SCRIPTY_Graph {
             context:SetInput(key, inputNode.Context:GetOutput(input.Name));
         }
 
-        if(!node.NodeTable.IsRunnable && node.NodeTable.Run) {
+        if((!node.NodeTable.InTriggers || #node.NodeTable.InTriggers == 0) && node.NodeTable.Run) {
             node.NodeTable.Run(node.Context);
         }
     }
@@ -177,11 +175,13 @@ function SCRIPTY.BuildGraph(nodePanels) {
         if(nodeTbl.NodeTable.Inputs) {
             var inputs = table.Copy(nodeTbl.NodeTable.Inputs);
 
-            if(nodeTbl.NodeTable.IsRunnable)
-                inputs["run"] = {
-                    Name = "Run",
-                    Execution = true,
-                };
+            if(nodeTbl.NodeTable.InTriggers)
+                foreach(var name, trigger in nodeTbl.NodeTable.InTriggers)
+                    inputs[name] = {
+                        Name = trigger.Name,
+                        Action = trigger.Action,
+                        Execution = true,
+                    };
 
             foreach(var name, value in inputs) {
                 var inputIo = node:GetInput(name);

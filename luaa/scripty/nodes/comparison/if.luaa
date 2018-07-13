@@ -1,0 +1,35 @@
+SCRIPTY.Registry.RegisterNode({
+    Name = "Comparison/If",
+    Description = "Return A ^ B",
+
+    Inputs = {
+        ["value"] = {
+            Name = "Value",
+            Required = true,
+        },
+    },
+
+    Outputs = {
+    },
+
+    InTriggers = {
+        ["run"] = {
+            Name = "Run",
+            Action = context => {
+                if(context:GetInput("value"))
+                    context:Trigger("true");
+                else
+                    context:Trigger("false");
+            },
+        }
+    },
+
+    OutTriggers = {
+        ["true"] = {
+            Name = "True",
+        },
+        ["false"] = {
+            Name = "False",
+        },
+    }
+});

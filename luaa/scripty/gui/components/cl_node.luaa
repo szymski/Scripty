@@ -25,33 +25,21 @@ class SCRIPTY_GUI_Node {
 
         this.TitleBar.Label:SetText(this.NodeTable.Title);
 
-        if(this.NodeTable.IsEvent) {
-            // this:AddInput({
-            //     Name = "active",
-            //     Label = "Active",
-            // });
+        if(this.NodeTable.InTriggers)
+            foreach(var key, trigger in this.NodeTable.InTriggers) 
+                this:AddInput({
+                    Name = key,
+                    Label = trigger.Name,
+                    Execution = true,
+                });
 
-            this:AddOutput({
-                Name = "triggered",
-                Label = "Triggered",
-                Trigger = true,
-                Execution = true,
-            });
-        }
-
-        if(this.NodeTable.IsRunnable) {
-            this:AddInput({
-                Name = "run",
-                Label = "Run",
-                Execution = true,
-            });
-
-            this:AddOutput({
-                Name = "done",
-                Label = "Done",
-                Execution = true,
-            });
-        }
+        if(this.NodeTable.OutTriggers)
+            foreach(var key, trigger in this.NodeTable.OutTriggers) 
+                this:AddOutput({
+                    Name = key,
+                    Label = trigger.Name,
+                    Execution = true,
+                });
 
         if(this.NodeTable.Inputs)
             foreach(var key, input in this.NodeTable.Inputs) 

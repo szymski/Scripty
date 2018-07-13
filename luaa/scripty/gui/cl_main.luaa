@@ -17,7 +17,7 @@ class SCRIPTY_GUI_MainWindow {
     }
 
     function SetScaleAndPosition() { 
-        this:SetSize(800, 600);
+        this:SetSize(1200, 800);
         this:Center();
     }
 

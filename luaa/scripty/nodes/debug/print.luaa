@@ -2,8 +2,6 @@ SCRIPTY.Registry.RegisterNode({
     Name = "Debug/Print",
     Description = "Prints to the console",
 
-    IsRunnable = true,
-
     Inputs = {
         ["value"] = {
             Name = "Value",
@@ -11,8 +9,19 @@ SCRIPTY.Registry.RegisterNode({
         },
     },
 
-    Run = context => {
-        print(context:GetInput("value"));
-        context:Trigger("done");
+    InTriggers = {
+        ["run"] = {
+            Name = "Run",
+            Action = context => {
+                print(context:GetInput("value"));
+                context:Trigger("done");
+            }
+        }
+    },
+
+    OutTriggers = {
+        ["done"] = {
+            Name = "Done",
+        }
     }
 });

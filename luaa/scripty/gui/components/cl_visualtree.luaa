@@ -24,8 +24,8 @@ class SCRIPTY_GUI_VisualTree {
         var node4 = this:AddNode("Number 5");
         node4:SetPos(50, 300);
 
-        node3:GetInput("run"):Connect(node1:GetOutput("triggered"));
-        node3:GetInput("value"):Connect(node2:GetOutput("out"));
+        // node3:GetInput("run"):Connect(node1:GetOutput("triggered"));
+        // node3:GetInput("value"):Connect(node2:GetOutput("out"));
 
         // var node1 = this:AddNode("Math/Add");
         // node1:SetPos(50, 150);
@@ -422,7 +422,7 @@ class SCRIPTY_GUI_VisualTree {
             // Connect output to input
             else if(this.ConnectingNodeIo.Type == SCRIPTY.IoType.Output &&
                 nodeIo.Type == SCRIPTY.IoType.Input) {
-                    this.ConnectingNodeIo:Disconnect();
+                    nodeIo:Disconnect();
                     nodeIo:Connect(this.ConnectingNodeIo);
                     this:EndConnect();
                 }
