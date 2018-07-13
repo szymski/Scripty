@@ -18,7 +18,7 @@ class SCRIPTY_Graph {
         this.Executions = 0;
 
         foreach(var node in this.Nodes) {
-            node.Context = SCRIPTY_NodeContext(node.NodeTable);
+            node.Context = SCRIPTY_NodeContext(this, node);
         }
     }
 
@@ -86,14 +86,18 @@ class SCRIPTY_Graph {
     The context is used to call next nodes and read/modify io values.
 */
 class SCRIPTY_NodeContext {
+    var Graph;
+    var Node;
     var NodeTable;
 
     var LastExecution = -1;
     var Inputs = { };
     var Outputs = { };
 
-    function this(nodeTable) {
-        this.NodeTable = nodeTable;
+    function this(graph, node) {
+        this.Graph = graph;
+        this.Node = node;
+        this.NodeTable = node.NodeTable;
     }
 
     function SetInput(name, value) {
@@ -116,6 +120,13 @@ class SCRIPTY_NodeContext {
             return def;
 
         return this.Outputs[name];
+    }
+
+    /**
+        Triggers execution output.
+    */
+    function Trigger(name) {
+        this.Graph:TriggerExecutionOutput(this.Node, name);
     }
 }
 

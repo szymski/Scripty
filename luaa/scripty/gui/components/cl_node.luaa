@@ -58,6 +58,7 @@ class SCRIPTY_GUI_Node {
                 this:AddInput({
                     Name = key,
                     Label = input.Name,
+                    Required = input.Required,
                 });
         
         if(this.NodeTable.Outputs)
@@ -65,6 +66,7 @@ class SCRIPTY_GUI_Node {
                 this:AddOutput({
                     Name = key,
                     Label = output.Name,
+                    Required = output.Required,
                 });
     }
 
@@ -117,6 +119,7 @@ class SCRIPTY_GUI_Node {
             Label = data.Label,
             Trigger = data.Trigger,
             Execution = data.Execution,
+            Required = data.Required,
         });
 
         return io;
@@ -132,6 +135,7 @@ class SCRIPTY_GUI_Node {
             Name = data.Name,
             Trigger = data.Trigger,
             Execution = data.Execution,
+            Required = data.Required,
         });
 
         return io;
@@ -176,6 +180,34 @@ class SCRIPTY_GUI_Node {
         this.VisualTree:OnNodeSelected(this);
     }
 
+    function OnMouseReleased(key) {
+        if(key == MOUSE_RIGHT)
+            this:OpenContextMenu();
+    }
+
+    function OpenContextMenu() {
+        var menu = vgui.Create("DMenu");
+        
+        menu:AddOption("Remove", function() {
+            this.VisualTree:RemoveNode(this);
+        }):SetIcon("icon16/delete.png");
+
+        menu:Open();
+    }
+
+    /**
+        Disconnects the node from everything.
+    */
+    function Disconnect() {
+        foreach(var input in this.InputsPanel:GetChildren())
+            input:Disconnect();
+
+        foreach(var output in this.OutputsPanel:GetChildren())
+            if(output.OutputPanels)
+                foreach(var output in output.OutputPanels)
+                    output:Disconnect();
+
+    }
 }
 
 CSCRIPTY_GUI_Node.__index = null;

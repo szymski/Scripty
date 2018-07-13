@@ -1,6 +1,6 @@
 SCRIPTY.Registry.RegisterNode({
-    Name = "Math/Add",
-    Description = "Adds two numbers",
+    Name = "Math/Power",
+    Description = "Return A ^ B",
 
     Inputs = {
         ["a"] = {
@@ -23,6 +23,6 @@ SCRIPTY.Registry.RegisterNode({
     },
 
     Run = context => {
-        context:SetOutput("out", context:GetInput("a") + context:GetInput("b"));
+        context:SetOutput("out", math.pow(context:GetInput("a"), context:GetInput("b")));
     },
 });

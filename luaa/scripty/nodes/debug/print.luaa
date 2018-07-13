@@ -7,10 +7,12 @@ SCRIPTY.Registry.RegisterNode({
     Inputs = {
         ["value"] = {
             Name = "Value",
+            Required = true,
         },
     },
 
     Run = context => {
         print(context:GetInput("value"));
+        context:Trigger("done");
     }
 });

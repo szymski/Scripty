@@ -17,6 +17,7 @@ class SCRIPTY_GUI_NodeIO {
     var Trigger;
     /// Determines whether this io is a part of execution control.
     var Execution;
+    var Required;
 
     /// The IO panel this panel is connected to.
     var InputPanel;
@@ -43,6 +44,9 @@ class SCRIPTY_GUI_NodeIO {
                     surface.SetDrawColor(255, 155, 55);
 
             if(!this.InputPanel && #this.OutputPanels == 0) {
+                if(this.Required)
+                    surface.SetDrawColor(255, 55, 55);
+
                 surface.DrawOutlinedRect(w / 2 - size / 2, h / 2 - size / 2, size, size);
             }
             else
@@ -70,6 +74,7 @@ class SCRIPTY_GUI_NodeIO {
         this.Label:SetText(data.Label);
         this.Trigger = data.Trigger;
         this.Execution = data.Execution;
+        this.Required = data.Required;
     }
 
     function SetupInput() {

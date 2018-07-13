@@ -185,11 +185,7 @@ class SCRIPTY_GUI_VisualTree {
             else
                 sX, sY = this.ConnectingNodeIo:LocalToScreen(w - 12, h / 2);
 
-            
-            var mX, mY = gui.MousePos();
-            var vX, vY = this:LocalToScreen(0, 0);
-            mX -= vX + this.Offset[1];
-            mY -= vY + this.Offset[2];
+            var mX, mY = this:GetMousePosition();
             // TODO: Fix mouse position when zoomed.
 
             surface.SetDrawColor(55, 155, 255);
@@ -243,15 +239,34 @@ class SCRIPTY_GUI_VisualTree {
 
         if(key == MOUSE_FIRST)
             this.Dragging = null;
+
+        if(key == MOUSE_RIGHT)
+            this:OpenContextMenu();
     }
 
     function OnMouseWheeled(delta) {
-        this.Zoom = math.Clamp(this.Zoom + delta * this.Zoom * 0.2, 0.1, 2);
+        this.Zoom = math.Clamp(this.Zoom + delta * this.Zoom * 0.2, 0.1, 1);
     }
+
 
     function Think() {
         this:UpdateDragging();
         this:UpdateNodeDragging();
+    }
+
+    function OpenContextMenu() {
+        var menu = vgui.Create("DMenu");
+        
+        var mouseX, mouseY = this:GetMousePosition();
+
+        foreach(var node in SCRIPTY.Registry.Nodes) {
+            menu:AddOption(node.Name, function() {
+                var node = this:AddNode(node.Name);
+                node:SetPos(mouseX, mouseY);
+            });
+        }
+
+        menu:Open();
     }
 
     function UpdateDragging() {
@@ -416,6 +431,32 @@ class SCRIPTY_GUI_VisualTree {
 
     function EndConnect() {
         this.ConnectingNodeIo = null;
+    }
+
+    function RemoveNode(node) {
+        node:Disconnect();
+        node:Remove();
+        table.RemoveByValue(this.Nodes, node);
+    }
+
+    /*---------------------------- 
+        Mouse
+    ------------------------------*/
+
+    /**
+        Returns mouse position in the graph viewport.
+    */
+    function GetMousePosition() {
+        var mX, mY = gui.MousePos();
+        var vX, vY = this:LocalToScreen(0, 0);
+        mX -= vX;
+        mY -= vY;
+        mX /= this.Zoom;
+        mY /= this.Zoom;
+        mX += this.Offset[1];
+        mY += this.Offset[2];
+
+        return mX, mY;
     }
 
     /*---------------------------- 
