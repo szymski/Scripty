@@ -94,7 +94,7 @@ class SCRIPTY_GUI_Node {
 
         this.OutputsPanel = this:Add("Panel");
         this.OutputsPanel:DockMargin(0, 2, 0, 0);
-        this.OutputsPanel:Dock(FILL);
+        this.OutputsPanel:Dock(RIGHT);
     }
 
     function AddInput(data) {
@@ -142,7 +142,20 @@ class SCRIPTY_GUI_Node {
     }
 
     function PerformLayout() {
-        this.InputsPanel:SetWidth(this:GetWide() / 2);
+        var maxInputWidth = 0;
+        foreach(var input in this.InputsPanel:GetChildren())
+            if(input:GetMaxWidth() > maxInputWidth)
+                maxInputWidth = input:GetMaxWidth();
+
+        var maxOutputWidth = 0;
+        foreach(var output in this.OutputsPanel:GetChildren())
+            if(output:GetMaxWidth() > maxOutputWidth)
+                maxOutputWidth = output:GetMaxWidth();
+
+        this.InputsPanel:SetWidth(maxInputWidth);
+        this.OutputsPanel:SetWidth(maxOutputWidth);
+        this:SetWidth(10 + maxInputWidth + maxOutputWidth);
+        this:SetHeight(20 + 20 * math.max(#this.InputsPanel:GetChildren(), #this.OutputsPanel:GetChildren()));
     }
 
     function Paint(w, h) {

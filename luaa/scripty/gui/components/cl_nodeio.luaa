@@ -95,6 +95,10 @@ class SCRIPTY_GUI_NodeIO {
         this.Label:DockMargin(0, 0, 4, 0);
     }
 
+    function PerformLayout() {
+
+    }
+
     function Paint(w, h) {
         if(this.Hovered) {
             surface.SetDrawColor(255, 255, 255, 10);
@@ -131,6 +135,12 @@ class SCRIPTY_GUI_NodeIO {
         }
 
         this.InputPanel = null;
+    }
+
+    function GetMaxWidth() {
+        surface.SetFont(this.Label:GetFont());
+        var w, h = surface.GetTextSize(this.Label:GetText());
+        return w + 20 + 2 * 2 + 10;
     }
 }
 

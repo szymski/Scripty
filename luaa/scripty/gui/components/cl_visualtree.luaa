@@ -434,6 +434,9 @@ class SCRIPTY_GUI_VisualTree {
     }
 
     function RemoveNode(node) {
+        this:EndConnect();
+        this:EndNodeDrag();
+
         node:Disconnect();
         node:Remove();
         table.RemoveByValue(this.Nodes, node);
