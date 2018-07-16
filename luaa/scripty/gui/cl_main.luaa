@@ -30,7 +30,7 @@ class SCRIPTY_GUI_MainWindow {
 
         var scriptMenu = this.MenuBar:AddMenu("Script");
 
-        scriptMenu:AddOption("Run", function() {
+        scriptMenu:AddOption("Run clientside", function() {
             print("Building graph");
             var graph = this.VisualTree:BuildExecutableGraph();
             print("Serializing graph");
@@ -41,6 +41,15 @@ class SCRIPTY_GUI_MainWindow {
             deserialized:Deserialize(serialized);
             print("Running graph");
             deserialized:Run();
+        }):SetIcon("icon16/control_play.png");
+
+        scriptMenu:AddOption("Run serverside", function() {
+            print("Building graph");
+            var graph = this.VisualTree:BuildExecutableGraph();
+            print("Serializing graph");
+            var serialized = graph:Serialize();
+            print("Sending to server");
+            SCRIPTY.Networking.RunGraph(serialized);
         }):SetIcon("icon16/control_play.png");
     }
 

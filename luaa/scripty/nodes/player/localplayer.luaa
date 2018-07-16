@@ -1,0 +1,15 @@
+SCRIPTY.Registry.RegisterNode({
+    Name = "Player/LocalPlayer",
+    Description = "Returns the first player on the server.",
+
+    Outputs = {
+        ["player"] = {
+            Name = "Player",
+            Type = "player",
+        },
+    },
+
+    Run = context => {
+        context:SetOutput("player", player.GetAll()[1]);
+    },
+});

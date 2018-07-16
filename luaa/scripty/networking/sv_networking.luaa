@@ -1,0 +1,15 @@
+SCRIPTY.Networking = { };
+
+/*---------------------------- 
+    Run graph
+------------------------------*/
+
+util.AddNetworkString("scripty_rungraph");
+
+net.Receive("scripty_rungraph", function(len, ply) {
+    print("Running graph from player " .. ply:Name());
+    var graphTable = net.ReadTable();
+    var graph = SCRIPTY_Graph();
+    graph:Deserialize(graphTable);
+    graph:Run();
+}); 

@@ -1,0 +1,28 @@
+SCRIPTY.Registry.RegisterNode({
+    Name = "Player/Kill",
+    Description = "Kills the player.",
+
+    InTriggers = {
+        ["run"] = {
+            Name = "Run",
+            Action = context => {
+                context:GetInput("player"):Kill();
+                context:Trigger("done");
+            }
+        }
+    },
+
+    Inputs = {
+        ["player"] = {
+            Name = "Player",
+            Type = "player",
+            Required = true,
+        },
+    },
+
+    OutTriggers = {
+        ["done"] = {
+            Name = "Done",
+        }
+    }
+});

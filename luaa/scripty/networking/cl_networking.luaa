@@ -1,0 +1,11 @@
+SCRIPTY.Networking = { };
+
+/*---------------------------- 
+    Run graph
+------------------------------*/
+
+function SCRIPTY.Networking.RunGraph(graphTable) {
+    net.Start("scripty_rungraph");
+    net.WriteTable(graphTable);
+    net.SendToServer();
+}
