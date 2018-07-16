@@ -64,13 +64,97 @@ class SCRIPTY_Graph {
         print("Updating node inputs on " .. node.Id);
 
         foreach(var key, input in node.Inputs) {
-            var inputNode = this.NodesById[input.Id];
-            this:UpdateNodeInputs(inputNode);
-            context:SetInput(key, inputNode.Context:GetOutput(input.Name));
+            var value;
+            
+            if(input.Id) {
+                var inputNode = this.NodesById[input.Id];
+                this:UpdateNodeInputs(inputNode);
+                value = inputNode.Context:GetOutput(input.Name);
+            }
+            else
+                value = input.Value;
+
+            context:SetInput(key, value);
         }
 
         if((!node.NodeTable.InTriggers || #node.NodeTable.InTriggers == 0) && node.NodeTable.Run) {
             node.NodeTable.Run(node.Context);
+        }
+    }
+
+    function Serialize() {
+        var tbl = {
+            Nodes = { },
+        };
+
+        // Serialize nodes
+        foreach(var node in this.Nodes) {
+            var nodeTbl = {
+                Id = node.Id,
+                Name = node.Name,
+                Inputs = { },
+            };
+
+            // Serialize inputs
+            if(node.Inputs)
+                foreach(var key, input in node.Inputs) {
+                    var connTbl;
+
+                    if(input.Value)
+                        connTbl = {
+                            Value = input.Value,
+                        };
+                    else
+                        connTbl = {
+                            Id = input.Id,
+                            Name = input.Name,
+                        };
+
+                    nodeTbl.Inputs[key] = connTbl;
+                }
+
+            tbl.Nodes[#tbl.Nodes + 1] = nodeTbl;
+        }
+
+        return tbl;
+    }
+
+    function Deserialize(tbl) {
+        this.Nodes = { };
+        this.NodesById = { };
+
+        foreach(var node in tbl.Nodes) {
+            var nodeTbl = {
+                Id = node.Id,
+                Name = node.Name,
+                Inputs = table.Copy(node.Inputs),
+                Outputs = { },
+            };
+
+            nodeTbl.NodeTable = SCRIPTY.Registry.NodesByName[nodeTbl.Name];
+            assert(nodeTbl.NodeTable, "No such node " .. nodeTbl.Name);
+
+            this.Nodes[#this.Nodes + 1] = nodeTbl;
+            this.NodesById[nodeTbl.Id] = nodeTbl;
+        }
+
+        // Build outputs table
+        foreach(var node in this.Nodes) {
+            if(node.Inputs) {
+                foreach(var key, input in node.Inputs) {
+                    if(!input.Value) {
+                        var otherNode = this.NodesById[input.Id];
+
+                        if(!otherNode.Outputs[input.Name])
+                            otherNode.Outputs[input.Name] = { };
+
+                        otherNode.Outputs[input.Name][#otherNode.Outputs[input.Name] + 1] = {
+                            Id = node.Id,
+                            Name = key,
+                        };
+                    }
+                }
+            }
         }
     }
 }
@@ -202,6 +286,11 @@ function SCRIPTY.BuildGraph(nodePanels) {
                     outputNode.Outputs[outputIo.Name][#outputNode.Outputs[outputIo.Name] + 1] = {
                         Id = nodeTbl.Id,
                         Name = inputIo.Name,
+                    };
+                }
+                else if(inputIo && inputIo.Value) {
+                    nodeTbl.Inputs[name] = {
+                        Value = inputIo.Value,
                     };
                 }
             }

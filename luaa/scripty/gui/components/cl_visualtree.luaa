@@ -245,8 +245,12 @@ class SCRIPTY_GUI_VisualTree {
         if(key == MOUSE_FIRST)
             this.Dragging = null;
 
-        if(key == MOUSE_RIGHT)
-            this:OpenContextMenu();
+        if(key == MOUSE_RIGHT) {
+            if(this.ConnectingNodeIo)
+                this:EndConnect();
+            else
+                this:OpenContextMenu();
+        }
     }
 
     function OnMouseWheeled(delta) {

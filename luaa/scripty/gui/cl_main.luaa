@@ -31,9 +31,16 @@ class SCRIPTY_GUI_MainWindow {
         var scriptMenu = this.MenuBar:AddMenu("Script");
 
         scriptMenu:AddOption("Run", function() {
+            print("Building graph");
             var graph = this.VisualTree:BuildExecutableGraph();
-            PrintTable(graph);
-            graph:Run();
+            print("Serializing graph");
+            var serialized = graph:Serialize();
+            PrintTable(serialized);
+            print("Deserializing graph");
+            var deserialized = SCRIPTY_Graph();
+            deserialized:Deserialize(serialized);
+            print("Running graph");
+            deserialized:Run();
         }):SetIcon("icon16/control_play.png");
     }
 

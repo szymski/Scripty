@@ -209,8 +209,8 @@ class SCRIPTY_GUI_Node {
 
         foreach(var output in this.OutputsPanel:GetChildren())
             if(output.OutputPanels)
-                foreach(var output in output.OutputPanels)
-                    output:Disconnect();
+                foreach(var output2 in output.OutputPanels)
+                    output2:Disconnect();
 
     }
 }
