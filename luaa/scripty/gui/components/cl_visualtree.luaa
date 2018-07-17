@@ -268,12 +268,52 @@ class SCRIPTY_GUI_VisualTree {
         
         var mouseX, mouseY = this:GetMousePosition();
 
+        var subMenus = {
+            Menu = menu,
+        };
+
+        // Create category sub menus
         foreach(var node in SCRIPTY.Registry.Nodes) {
-            menu:AddOption(node.Name, function() {
+            var subMenu = subMenus;
+
+            foreach(var cat in node.Categories) {
+                if(!subMenu[cat]) {
+                    subMenu[cat] = { };
+                    subMenu[cat].Menu, label = subMenu.Menu:AddSubMenu(cat);
+                    label:SetIcon("icon16/folder.png");
+                }
+
+                subMenu = subMenu[cat];
+            }
+        }
+
+        // Populate menus with nodes
+        foreach(var node in SCRIPTY.Registry.Nodes) {
+            var subMenu = subMenus;
+
+            foreach(var cat in node.Categories) {
+                subMenu = subMenu[cat];
+            }
+
+            var option = subMenu.Menu:AddOption(node.Title, function() {
                 var node = this:AddNode(node.Name);
                 node:SetPos(mouseX, mouseY);
             });
+
+            if(node.IsEvent)
+                option:SetIcon("icon16/lightning.png");
+            else if(node.InTriggers && #table.GetKeys(node.InTriggers) > 0)
+                option:SetIcon("icon16/page_go.png");
+            else
+                option:SetIcon("icon16/page.png");
         }
+
+        // foreach(var node in SCRIPTY.Registry.Nodes) {
+        //     menu:AddOption(node.Name, function() {
+        //         var node = this:AddNode(node.Name);
+        //         node:SetPos(mouseX, mouseY);
+        //     });
+        // }
 
         menu:Open();
     }

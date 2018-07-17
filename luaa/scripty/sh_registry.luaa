@@ -27,6 +27,8 @@ function SCRIPTY.Registry.RegisterNode(tbl) {
 
     var parts = string.Explode("/", tbl.Name);
     tbl.Title = parts[#parts];
+    parts[#parts] = null;
+    tbl.Categories = parts;
 
     SCRIPTY.Registry.Nodes[#SCRIPTY.Registry.Nodes + 1] = tbl;
     SCRIPTY.Registry.NodesByName[tbl.Name] = tbl;

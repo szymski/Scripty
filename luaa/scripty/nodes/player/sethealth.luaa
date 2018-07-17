@@ -20,7 +20,7 @@ SCRIPTY.Registry.RegisterNode({
             Required = true,
         },
         ["health"] = {
-            Name = "Player",
+            Name = "Health",
             Z = 2,
             Type = "number",
             Required = true,
