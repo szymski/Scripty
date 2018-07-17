@@ -1,0 +1,66 @@
+hook.Call("SCRIPTY_Reload");
+
+hook.Add("SCRIPTY_Reload", "SCRIPTY_Reload_StopGraphs", function() {
+    print("Stopping scripts on reload");
+
+    if(SCRIPTY.GraphManager.RunningGraphs)
+        foreach(var name, graph in SCRIPTY.GraphManager.RunningGraphs) {
+            SCRIPTY.GraphManager.StopGraph(name);
+        }
+});
+
+SCRIPTY.GraphManager = { };
+
+SCRIPTY.GraphManager.RunningGraphs = { };
+if(CLIENT) {
+    SCRIPTY.GraphManager.ServerGraphs = { };
+}
+
+function SCRIPTY.GraphManager.RunGraph(graphTable) {
+    assert(graphTable.Name, "GraphTable.Name is null.");
+    assert(graphTable.Graph, "GraphTable.Graph is null.");
+
+    var graph = SCRIPTY.GraphManager.RunningGraphs[graphTable.Name];
+    if(graph) {
+        print("Graph " .. graph.Name .. " is already running. Stopping it now.");
+        graph.Graph:Stop();
+    }
+
+    SCRIPTY.GraphManager.RunningGraphs[graphTable.Name] = {
+        Name = graphTable.Name,
+        Graph = graphTable.Graph,
+        StartTime = CurTime(),
+    };
+
+    SCRIPTY.GraphManager.RunningGraphs[graphTable.Name].Graph.Name = graphTable.Name;
+    SCRIPTY.GraphManager.RunningGraphs[graphTable.Name].Graph:Run();
+
+    SCRIPTY.Networking.OnGraphStarted(graphTable.Name);
+}
+
+function SCRIPTY.GraphManager.StopGraph(graphName) {
+    assert(graphName, "graphName is null.");
+    
+    var graph = SCRIPTY.GraphManager.RunningGraphs[graphName];
+    if(graph) {
+        graph.Graph:Stop();
+        SCRIPTY.GraphManager.RunningGraphs[graphName] = null;
+        SCRIPTY.Networking.OnGraphStopped(graphName);
+    }
+}
+
+if(CLIENT) {
+    function SCRIPTY.GraphManager.OnServerGraphStarted(graphName) {
+        SCRIPTY.GraphManager.ServerGraphs[graphName] = {
+            StartTime = CurTime(),
+        };
+
+        hook.Call("SCRIPTY_OnServerGraphStarted", null, graphName);
+    }
+
+    function SCRIPTY.GraphManager.OnServerGraphStopped(graphName) {
+        SCRIPTY.GraphManager.ServerGraphs[graphName] = null;
+
+        hook.Call("SCRIPTY_OnServerGraphStopped", null, graphName);
+    }
+}

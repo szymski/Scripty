@@ -1,0 +1,31 @@
+SCRIPTY.Registry.RegisterNode({
+    Name = "Events/Player/OnPlayerDeath",
+    Description = "Called when a player dies.",
+
+    IsEvent = true,
+
+    OutTriggers = {
+        ["triggered"] = {
+            Name = "Triggered",
+        },
+    },
+
+    Outputs = {
+        ["player"] = {
+            Name = "Player",
+            Type = "player",
+        }
+    },
+
+    OnStart = context => {
+        hook.Add("PlayerDeath", context, function(context, ply) {
+            context:SetOutput("player", ply);
+            context:Trigger("triggered");
+        });
+    },
+
+    OnStop = context => {
+        print("OnStop");
+        hook.Remove("PlayerDeath", context);
+    },
+});

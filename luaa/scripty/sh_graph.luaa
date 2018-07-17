@@ -4,6 +4,7 @@
 class SCRIPTY_Graph {
     var Nodes = { };
     var NodesById = { };
+    var Name = "";
 
     /// Number of executable node executions. Used to cache the values.
     var Executions = 0;
@@ -14,11 +15,20 @@ class SCRIPTY_Graph {
         this:TriggerEvent("Events/OnStart");
     }
 
+    function Stop() {
+        foreach(var node in this.Nodes) {
+            if(node.NodeTable.OnStop)
+                node.NodeTable.OnStop(node.Context);
+        }
+    }
+
     function InitContexts() {
         this.Executions = 0;
 
         foreach(var node in this.Nodes) {
             node.Context = SCRIPTY_NodeContext(this, node);
+            if(node.NodeTable.OnStart)
+                node.NodeTable.OnStart(node.Context);
         }
     }
 
@@ -188,7 +198,7 @@ class SCRIPTY_NodeContext {
 
     function GetInput(name, def) {
         if(!this.Inputs[name])
-            return def;
+            return this.NodeTable.Inputs[name].Default ?? def;
 
         return this.Inputs[name];
     }
@@ -209,6 +219,10 @@ class SCRIPTY_NodeContext {
     */
     function Trigger(name) {
         this.Graph:TriggerExecutionOutput(this.Node, name);
+    }
+
+    function IsValid() {
+        return true;
     }
 }
 

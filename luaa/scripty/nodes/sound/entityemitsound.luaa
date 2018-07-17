@@ -1,0 +1,53 @@
+SCRIPTY.Registry.RegisterNode({
+    Name = "Sound/EntityEmitSound",
+    Description = "Plays a sound at entity's position.",
+
+    InTriggers = {
+        ["run"] = {
+            Name = "Run",
+            Action = context => {
+                context:GetInput("entity"):EmitSound(
+                    context:GetInput("soundname"),
+                    context:GetInput("soundlevel"),
+                    context:GetInput("pitch"),
+                    context:GetInput("volume")
+                );
+                context:Trigger("done");
+            },
+        }
+    },
+
+    OutTriggers = {
+        ["done"] = {
+            Name = "Done",
+        },
+    },
+
+    Inputs = {
+        ["entity"] = {
+            Name = "Entity",
+            Type = "entity",
+            Required = true,
+        },
+        ["soundname"] = {
+            Name = "Name",
+            Type = "string",
+            Required = true,
+        },
+        ["soundlevel"] = {
+            Name = "Level",
+            Type = "number",
+            Default = 75,
+        },
+        ["pitch"] = {
+            Name = "Pitch",
+            Type = "number",
+            Default = 100,
+        },
+        ["volume"] = {
+            Name = "Volume",
+            Type = "number",
+            Default = 1,
+        },
+    },
+});

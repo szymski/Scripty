@@ -4,8 +4,40 @@ SCRIPTY.Networking = { };
     Run graph
 ------------------------------*/
 
-function SCRIPTY.Networking.RunGraph(graphTable) {
+function SCRIPTY.Networking.RunGraph(graphName, graphTable) {
+    assert(graphName, "graphName is null.");
+    assert(graphTable, "graphTable is null.");
+
     net.Start("scripty_rungraph");
+    net.WriteString(graphName);
     net.WriteTable(graphTable);
     net.SendToServer();
 }
+
+/*---------------------------- 
+    Stop graph
+------------------------------*/
+
+function SCRIPTY.Networking.StopGraph(graphName) {
+    net.Start("scripty_stopgraph");
+    net.WriteString(graphName);
+    net.SendToServer();
+}
+
+/*---------------------------- 
+    On graph started
+------------------------------*/
+
+net.Receive("scripty_ongraphstarted", function(len, ply) {
+    var name = net.ReadString();
+    SCRIPTY.GraphManager.OnServerGraphStarted(name);
+});
+
+/*---------------------------- 
+    On graph stopped
+------------------------------*/
+
+net.Receive("scripty_ongraphstopped", function(len, ply) {
+    var name = net.ReadString();
+    SCRIPTY.GraphManager.OnServerGraphStopped(name);
+}); 

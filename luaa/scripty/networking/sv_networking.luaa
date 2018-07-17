@@ -8,8 +8,50 @@ util.AddNetworkString("scripty_rungraph");
 
 net.Receive("scripty_rungraph", function(len, ply) {
     print("Running graph from player " .. ply:Name());
+    var name = net.ReadString();
     var graphTable = net.ReadTable();
     var graph = SCRIPTY_Graph();
     graph:Deserialize(graphTable);
-    graph:Run();
+
+    SCRIPTY.GraphManager.RunGraph({
+        Name = name,
+        Graph = graph,
+    });
+});
+
+/*---------------------------- 
+    Stop graph
+------------------------------*/
+
+util.AddNetworkString("scripty_stopgraph");
+
+net.Receive("scripty_stopgraph", function(len, ply) {
+    var name = net.ReadString();
+    print("Client requested to stop graph " .. name);
+
+    SCRIPTY.GraphManager.StopGraph(name);
 }); 
+
+/*---------------------------- 
+    On graph started
+------------------------------*/
+
+util.AddNetworkString("scripty_ongraphstarted");
+
+function SCRIPTY.Networking.OnGraphStarted(graphName) {
+    net.Start("scripty_ongraphstarted");
+    net.WriteString(graphName);
+    net.Broadcast();
+}
+
+/*---------------------------- 
+    On graph stopped
+------------------------------*/
+
+util.AddNetworkString("scripty_ongraphstopped");
+
+function SCRIPTY.Networking.OnGraphStopped(graphName) {
+    net.Start("scripty_ongraphstopped");
+    net.WriteString(graphName);
+    net.Broadcast();
+}
