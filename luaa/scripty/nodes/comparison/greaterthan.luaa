@@ -1,10 +1,14 @@
 SCRIPTY.Registry.RegisterNode({
-    Name = "Comparison/If",
-    Description = "Return A ^ B",
+    Name = "Comparison/GreaterThan",
+    Description = "Checks if A is greater than B.",
 
     Inputs = {
-        ["value"] = {
-            Name = "Value",
+        ["a"] = {
+            Name = "A",
+            Required = true,
+        },
+        ["b"] = {
+            Name = "B",
             Required = true,
         },
     },
@@ -16,7 +20,7 @@ SCRIPTY.Registry.RegisterNode({
         ["run"] = {
             Name = "Run",
             Action = context => {
-                if(context:GetInput("value"))
+                if(context:GetInput("a") > context:GetInput("b"))
                     context:Trigger("true");
                 else
                     context:Trigger("false");

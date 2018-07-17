@@ -1,0 +1,50 @@
+SCRIPTY.Registry.RegisterNode({
+    Name = "Loops/ForEach",
+    Description = "Iterates over an array of elements.",
+
+    Inputs = {
+        ["array"] = {
+            Name = "Array",
+            Required = true,
+        },
+    },
+
+    Outputs = {
+        ["key"] = {
+            Name = "Key",
+            Z = 1,
+        },
+        ["value"] = {
+            Name = "Value",
+            Z = 2,
+        },
+    },
+
+    InTriggers = {
+        ["run"] = {
+            Name = "Run",
+            Action = context => {
+                var array = context:GetInput("array");
+
+                foreach(var key, value in array) {
+                    context:SetOutput("key", key);
+                    context:SetOutput("value", value);
+                    context:Trigger("iteration");
+                }
+
+                context:Trigger("done");
+            },
+        },
+    },
+
+    OutTriggers = {
+        ["done"] = {
+            Name = "Done",
+            Z = 1,
+        },
+        ["iteration"] = {
+            Name = "Iteration",
+            Z = 2,
+        },
+    }
+});

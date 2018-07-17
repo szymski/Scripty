@@ -1,0 +1,23 @@
+SCRIPTY.Registry.RegisterNode({
+    Name = "Player/GetHealth",
+    Description = "Returns the health of the player.",
+
+    Inputs = {
+        ["player"] = {
+            Name = "Player",
+            Type = "player",
+            Required = true,
+        },
+    },
+
+    Outputs = {
+        ["health"] = {
+            Name = "Health",
+            Type = "number",
+        }
+    },
+
+    Run = context => {
+        context:SetOutput("health", context:GetInput("player"):Health());
+    },
+});

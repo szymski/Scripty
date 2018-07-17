@@ -26,26 +26,31 @@ SCRIPTY.Registry.RegisterNode({
     Inputs = {
         ["entity"] = {
             Name = "Entity",
+            Z = 1,
             Type = "entity",
             Required = true,
         },
         ["soundname"] = {
             Name = "Name",
+            Z = 2,
             Type = "string",
             Required = true,
         },
         ["soundlevel"] = {
             Name = "Level",
+            Z = 3,
             Type = "number",
             Default = 75,
         },
         ["pitch"] = {
             Name = "Pitch",
+            Z = 4,
             Type = "number",
             Default = 100,
         },
         ["volume"] = {
             Name = "Volume",
+            Z = 5,
             Type = "number",
             Default = 1,
         },

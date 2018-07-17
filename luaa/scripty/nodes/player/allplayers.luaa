@@ -1,0 +1,15 @@
+SCRIPTY.Registry.RegisterNode({
+    Name = "Player/AllPlayers",
+    Description = "Returns all players.",
+
+    Outputs = {
+        ["players"] = {
+            Name = "Players",
+            Type = "player[]",
+        },
+    },
+
+    Run = context => {
+        context:SetOutput("players", player.GetAll());
+    },
+});

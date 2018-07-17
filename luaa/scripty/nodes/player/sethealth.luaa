@@ -1,0 +1,35 @@
+SCRIPTY.Registry.RegisterNode({
+    Name = "Player/SetHealth",
+    Description = "Sets the health of the player.",
+
+    InTriggers = {
+        ["run"] = {
+            Name = "Run",
+            Action = context => {
+                context:GetInput("player"):SetHealth(context:GetInput("health"));
+                context:Trigger("done");
+            }
+        }
+    },
+
+    Inputs = {
+        ["player"] = {
+            Name = "Player",
+            Z = 1,
+            Type = "player",
+            Required = true,
+        },
+        ["health"] = {
+            Name = "Player",
+            Z = 2,
+            Type = "number",
+            Required = true,
+        },
+    },
+
+    OutTriggers = {
+        ["done"] = {
+            Name = "Done",
+        }
+    }
+});

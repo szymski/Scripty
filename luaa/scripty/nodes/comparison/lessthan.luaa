@@ -1,0 +1,39 @@
+SCRIPTY.Registry.RegisterNode({
+    Name = "Comparison/LessThan",
+    Description = "Checks if A is less than B.",
+
+    Inputs = {
+        ["a"] = {
+            Name = "A",
+            Required = true,
+        },
+        ["b"] = {
+            Name = "B",
+            Required = true,
+        },
+    },
+
+    Outputs = {
+    },
+
+    InTriggers = {
+        ["run"] = {
+            Name = "Run",
+            Action = context => {
+                if(context:GetInput("a") < context:GetInput("b"))
+                    context:Trigger("true");
+                else
+                    context:Trigger("false");
+            },
+        },
+    },
+
+    OutTriggers = {
+        ["true"] = {
+            Name = "True",
+        },
+        ["false"] = {
+            Name = "False",
+        },
+    }
+});

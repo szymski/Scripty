@@ -1,0 +1,25 @@
+SCRIPTY.Registry.RegisterNode({
+    Name = "Events/Think",
+    Description = "Called every frame.",
+
+    IsEvent = true,
+
+    OutTriggers = {
+        ["triggered"] = {
+            Name = "Triggered",
+        },
+    },
+
+    Outputs = {
+    },
+
+    OnStart = context => {
+        hook.Add("Think", context, function(context) {
+            context:Trigger("triggered");
+        });
+    },
+
+    OnStop = context => {
+        hook.Remove("Think", context);
+    },
+});
