@@ -39,6 +39,17 @@ class SCRIPTY_GUI_VisualTree {
             node:Remove();
     }
 
+    function Clear() {
+        foreach(var node in this.Nodes)
+            node:Remove();
+
+        this.Nodes = { };
+        this:EndConnect();
+        this:EndNodeDrag();
+        
+        this.MainWindow.PropertyView:SelectNode(null);
+    }
+
     function AddNode(name) {
         assert(name, "name is null.");
 
@@ -119,12 +130,6 @@ class SCRIPTY_GUI_VisualTree {
         }
 
         this:DrawConnections();
-
-        surface.SetDrawColor(255, 55, 55);
-        this:DrawSpline({
-            { 400, 50 },
-            { 300, 100 },
-        });
     }
 
     function DrawConnections() {
@@ -482,6 +487,8 @@ class SCRIPTY_GUI_VisualTree {
         node:Disconnect();
         node:Remove();
         table.RemoveByValue(this.Nodes, node);
+
+        this.MainWindow.PropertyView:SelectNode(null);
     }
 
     /*---------------------------- 

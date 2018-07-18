@@ -1,4 +1,6 @@
 class SCRIPTY_GUI_MainWindow {
+    var MenuWrapper;
+    var DebugMenu;
     var MenuBar;
     var VisualTree;
     var PropertyView;
@@ -11,6 +13,7 @@ class SCRIPTY_GUI_MainWindow {
         this:SetScaleAndPosition();
         this:MakePopup();
 
+        this:AddMenuWrapper();
         this:RebuildMenuBar();
         this:RegisterMenuHooks();
         this:AddVisualTree();
@@ -18,7 +21,7 @@ class SCRIPTY_GUI_MainWindow {
     }
 
     function Setup() {
-            
+        
     }
 
     function SetScaleAndPosition() { 
@@ -26,18 +29,91 @@ class SCRIPTY_GUI_MainWindow {
         this:Center();
     }
 
+    function AddMenuWrapper() {
+        this.MenuWrapper = this:Add("Panel");
+        this.MenuWrapper:DockMargin(-4, -6, -4, 0);
+        this.MenuWrapper:Dock(TOP);
+
+        this:RebuildDebugPanel();
+    }
+
+    function RebuildDebugPanel() {
+        if(IsValid(this.DebugMenu)) {
+            this.DebugMenu:Remove();
+        }
+
+        this.DebugMenu = this.MenuWrapper:Add("Panel");
+        this.DebugMenu:DockMargin(0, 0, 4, 0);
+        this.DebugMenu:SetWidth(300);
+        function this.DebugMenu.PerformLayout(debugMenu) {
+            this.DebugMenu:SetWidth(300);
+            this.DebugMenu:SetPos(this.MenuWrapper:GetWide() - 300 - 4, 0);
+        }
+
+        if(!SCRIPTY.GraphManager.ServerGraphs[this.TestGraphName]) {
+            this:AddDebugButton("icon16/control_play.png", function() {
+                print("Building graph");
+                var graph = this.VisualTree:BuildExecutableGraph();
+                print("Serializing graph");
+                var serialized = graph:Serialize();
+                print("Sending to server");
+                SCRIPTY.Networking.RunGraph(this.TestGraphName, serialized);
+            });
+        }
+        else {
+            this:AddDebugButton("icon16/control_stop.png", function() {
+                print("Requesting server to stop the graph");
+                SCRIPTY.Networking.StopGraph(this.TestGraphName);
+            });
+
+            this:AddDebugButton("icon16/control_pause.png", function() {
+            });
+
+            this:AddDebugButton("icon16/arrow_right.png", function() {
+            });
+        }
+    }
+
+    function AddDebugButton(icon, action) {
+        var runButton = this.DebugMenu:Add("DButton");
+        runButton:SetText("");
+        runButton:Dock(LEFT);
+        runButton:SetWidth(24);
+        runButton:SetIcon(icon);
+        function runButton:Paint(w, h) {
+            if(this:IsDown()) {
+               surface.SetDrawColor(0, 0, 0, 150);
+                surface.DrawRect(0, 0, w, h); 
+            }
+            else if(this:IsHovered()) {
+                surface.SetDrawColor(0, 0, 0, 50);
+                surface.DrawRect(0, 0, w, h);
+            }
+        }
+        runButton.DoClick = btn => action(this);
+    }
+
     function RebuildMenuBar() {
         if(IsValid(this.MenuBar))
             this.MenuBar:Remove();
 
-        this.MenuBar = this:Add("DMenuBar");
+        this.MenuBar = this.MenuWrapper:Add("DMenuBar");
         this.MenuBar:SetZPos(-1);
-        this.MenuBar:Dock(TOP);
-        this.MenuBar:DockMargin(-3, -6, -3, 0);
+        this.MenuBar:Dock(FILL);
+
+        // Script menu
 
         var scriptMenu = this.MenuBar:AddMenu("Script");
 
-        scriptMenu:AddOption("Run clientside", function() {
+        scriptMenu:AddOption("New script", function() {
+            this.VisualTree:Clear();
+        }):SetIcon("icon16/page_add.png");
+
+        // Debug menu
+
+        var debugMenu = this.MenuBar:AddMenu("Debug");
+
+        debugMenu:AddOption("Run clientside", function() {
             print("Building graph");
             var graph = this.VisualTree:BuildExecutableGraph();
             print("Serializing graph");
@@ -51,7 +127,7 @@ class SCRIPTY_GUI_MainWindow {
         }):SetIcon("icon16/control_play.png");
 
         if(!SCRIPTY.GraphManager.ServerGraphs[this.TestGraphName]) {
-            scriptMenu:AddOption("Run serverside", function() {
+            debugMenu:AddOption("Run serverside", function() {
                 print("Building graph");
                 var graph = this.VisualTree:BuildExecutableGraph();
                 print("Serializing graph");
@@ -61,7 +137,7 @@ class SCRIPTY_GUI_MainWindow {
             }):SetIcon("icon16/control_play.png");
         }
         else {
-            scriptMenu:AddOption("Stop serverside", function() {
+            debugMenu:AddOption("Stop serverside", function() {
                 print("Requesting server to stop the graph");
                 SCRIPTY.Networking.StopGraph(this.TestGraphName);
             }):SetIcon("icon16/control_stop.png");
@@ -71,10 +147,12 @@ class SCRIPTY_GUI_MainWindow {
     function RegisterMenuHooks() {
         hook.Add("SCRIPTY_OnServerGraphStarted", "SCRIPTY_Editor_OnServerGraphStarted", function(name) {
             this:RebuildMenuBar();
+            this:RebuildDebugPanel();
         });
 
         hook.Add("SCRIPTY_OnServerGraphStopped", "SCRIPTY_Editor_OnServerGraphStopped", function(name) {
             this:RebuildMenuBar();
+            this:RebuildDebugPanel();
         });
     }
 

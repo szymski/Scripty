@@ -38,6 +38,16 @@ class SCRIPTY_GUI_PropertyView {
     function SelectNode(nodePanel) {
         this.Node = nodePanel;
 
+        if(!IsValid(nodePanel)) {
+            this.Title:SetText("");
+            this.Description:SetText("");
+
+            if(IsValid(this.Properties))
+                this.Properties:Remove();
+            
+            return;
+        }
+
         this.Title:SetText(this.Node.NodeTable.Name);
         this.Description:SetText(this.Node.NodeTable.Description ?? "No description.");
         timer.Simple(0.05, function() {
