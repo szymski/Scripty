@@ -1,3 +1,5 @@
+enum USE_SPLINE = true;
+
 class SCRIPTY_GUI_VisualTree {
     var MainWindow;
 
@@ -30,44 +32,6 @@ class SCRIPTY_GUI_VisualTree {
 
         node3:GetInput("run"):Connect(node1:GetOutput("triggered"));
         node3:GetInput("value"):Connect(node2:GetOutput("out"));
-
-        // var node1 = this:AddNode("Math/Add");
-        // node1:SetPos(50, 150);
-        // var a = node1:AddInput({
-        //     Label = "A",
-        // });
-        // var b = node1:AddInput({
-        //     Label = "B",
-        // });
-        // var out = node1:AddOutput({
-        //     Label = "Output",
-        // });
-
-        // var node2 = this:AddNode("Math/Add");
-        // node2:SetPos(400, 100);
-        // var a2 = node2:AddInput({
-        //     Label = "A",
-        // });
-        // var b2 = node2:AddInput({
-        //     Label = "B",
-        // });
-        // var out2 = node2:AddOutput({
-        //     Label = "Output",
-        // });
-
-        // var node2 = this:AddNode("Math/Add");
-        // node2:SetPos(400, 300);
-        // var a2 = node2:AddInput({
-        //     Label = "A",
-        // });
-        // var b2 = node2:AddInput({
-        //     Label = "B",
-        // });
-        // var out2 = node2:AddOutput({
-        //     Label = "Output",
-        // });
-
-        // a2:Connect(out);
     }
 
     function OnRemove() {
@@ -155,6 +119,12 @@ class SCRIPTY_GUI_VisualTree {
         }
 
         this:DrawConnections();
+
+        surface.SetDrawColor(255, 55, 55);
+        this:DrawSpline({
+            { 400, 50 },
+            { 300, 100 },
+        });
     }
 
     function DrawConnections() {
@@ -206,14 +176,23 @@ class SCRIPTY_GUI_VisualTree {
         The first IO should be an output.
     */
     function DrawConnection(startX, startY, endX, endY, straight) {
-        var length = 20;
+        static if(USE_SPLINE)
+            var length = 15;
+        else
+            var length = 20;
 
         if(straight) {
             surface.DrawLine(startX, startY, endX , endY);
         }
         else /*if(startX < endX)*/ {
             surface.DrawLine(startX, startY, startX + length, startY);
-            surface.DrawLine(startX + length, startY, endX - length, endY);
+            static if(USE_SPLINE)
+                this:DrawSpline({
+                    { startX + length, startY },
+                    { endX - length, endY },
+                });
+            else
+                surface.DrawLine(startX + length, startY, endX - length, endY);
             surface.DrawLine(endX, endY, endX - length, endY);
          }
         // else {
@@ -221,6 +200,25 @@ class SCRIPTY_GUI_VisualTree {
         //     surface.DrawLine(startX - length, startY, endX + length, endY);
         //     surface.DrawLine(endX, endY, endX + length, endY);
         // }
+    }
+
+    function DrawSpline(spline) {
+        var p0 = spline[1];
+        var m0 = { 100, 0 };
+        var p1 = spline[2];
+        var m1 = { 100, 0 };
+
+        var prev = p0;
+        for(var t = 0; t <= 1.05; t += 0.02) {
+            var p = {
+                (2 * t ** 3 - 3 * t ** 2 + 1) * p0[1] + (t ** 3 - 2 * t ** 2 + t) * m0[1] + (-2 * t ** 3 + 3 * t ** 2) * p1[1] + (t ** 3 - t ** 2) * m1[1],
+                (2 * t ** 3 - 3 * t ** 2 + 1) * p0[2] + (t ** 3 - 2 * t ** 2 + t) * m0[2] + (-2 * t ** 3 + 3 * t ** 2) * p1[2] + (t ** 3 - t ** 2) * m1[2],
+            };
+
+            surface.DrawLine(prev[1], prev[2], p[1], p[2]);
+
+            prev = p;
+        }
     }
 
     function OnMousePressed(key) {
@@ -307,14 +305,7 @@ class SCRIPTY_GUI_VisualTree {
             else
                 option:SetIcon("icon16/page.png");
         }
-
-        // foreach(var node in SCRIPTY.Registry.Nodes) {
-        //     menu:AddOption(node.Name, function() {
-        //         var node = this:AddNode(node.Name);
-        //         node:SetPos(mouseX, mouseY);
-        //     });
-        // }
-
+        
         menu:Open();
     }
 

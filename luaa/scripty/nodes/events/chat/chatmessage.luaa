@@ -1,0 +1,41 @@
+SCRIPTY.Registry.RegisterNode({
+    Name = "Events/Chat/OnChatMessage",
+    Description = "Called when a player dies.",
+
+    IsEvent = true,
+
+    OutTriggers = {
+        ["triggered"] = {
+            Name = "Triggered",
+        },
+    },
+
+    Outputs = {
+        ["player"] = {
+            Name = "Player",
+            Type = "player",
+        },
+        ["message"] = {
+            Name = "Message",
+            Type = "string",
+        },
+        ["teamchat"] = {
+            Name = "Team Chat",
+            Type = "bool",
+        }
+    },
+
+    OnStart = context => {
+        hook.Add("PlayerSay", context, function(context, ply, message, team) {
+            context:SetOutput("player", ply);
+            context:SetOutput("message", message);
+            context:SetOutput("teamchat", team);
+            context:Trigger("triggered");
+        });
+    },
+
+    OnStop = context => {
+        print("OnStop");
+        hook.Remove("PlayerSay", context);
+    },
+});
