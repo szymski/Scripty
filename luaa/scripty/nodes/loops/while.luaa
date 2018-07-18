@@ -1,0 +1,40 @@
+SCRIPTY.Registry.RegisterNode({
+    Name = "Loops/While",
+    Description = "Keeps iterating until the value is false.",
+
+    Inputs = {
+        ["value"] = {
+            Name = "Value",
+        },
+    },
+
+    Outputs = {
+    },
+
+    InTriggers = {
+        ["run"] = {
+            Name = "Run",
+            Action = context => {
+                var value = context:GetInput("value");
+
+                while(value) {
+                    context:Trigger("iteration");
+                    value = context:GetInput("value");
+                }
+
+                context:Trigger("done");
+            },
+        },
+    },
+
+    OutTriggers = {
+        ["done"] = {
+            Name = "Done",
+            Z = 1,
+        },
+        ["iteration"] = {
+            Name = "Iteration",
+            Z = 2,
+        },
+    }
+});

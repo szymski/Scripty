@@ -1,3 +1,8 @@
+SCRIPTY.GraphYield = {
+    Node = 1,
+    WaitForEvent = 2,
+};
+
 /**
     Represents a graph of nodes that can be executed.
 */
@@ -5,17 +10,54 @@ class SCRIPTY_Graph {
     var Nodes = { };
     var NodesById = { };
     var Name = "";
+    var Coroutine;
 
     /// Number of executable node executions. Used to cache the values.
     var Executions = 0;
 
+    var EventQueue = { };
+
     function Run() {
         print("Running graph");
+
+        this.Coroutine = coroutine.create(function() {
+            this:CoroutineFunc();
+        });
+
         this:InitContexts();
         this:TriggerEvent("Events/OnStart");
+
+        hook.Add("Think", this, function(self) {
+            var keepRunning = true;
+
+            var startTime = SysTime();
+            var tickInterval = engine.TickInterval();
+
+            while(keepRunning) {
+                var elapsed = SysTime() - startTime;
+
+                if(elapsed > tickInterval * ScriptyConfig.MaxCpuUsage)
+                    return;
+
+                var success, param = coroutine.resume(this.Coroutine);
+
+                if(!success) {
+                    print("Execution error: " .. param);
+                    keepRunning = false;
+                }
+                else {
+                    if(param == SCRIPTY.GraphYield.Node)
+                        keepRunning = true;
+                    else
+                        keepRunning = false;
+                }
+            }
+        });
     }
 
     function Stop() {
+        hook.Remove("Think", this);
+
         foreach(var node in this.Nodes) {
             if(node.NodeTable.OnStop)
                 node.NodeTable.OnStop(node.Context);
@@ -32,8 +74,27 @@ class SCRIPTY_Graph {
         }
     }
 
+    function CoroutineFunc() {
+        while(true) {
+            // Execute events if there are any
+            while(#this.EventQueue > 0) {
+                var event = table.remove(this.EventQueue, 1);
+
+                foreach(var name, value in event.Outputs)
+                    event.Node.Context.Outputs[name] = value;
+
+                foreach(var output in event.Node.Outputs[event.Name]) {
+                    var secondNode = this.NodesById[output.Id];
+                    this:TriggerExecutionInput(secondNode, output.Name);
+                }
+            }
+
+            coroutine.yield(SCRIPTY.GraphYield.WaitForEvent); // Wait for events
+        }
+    }
+
     function TriggerEvent(name) {
-        print("Triggering event " .. name);
+        // print("Triggering event " .. name);
 
         foreach(var node in this.Nodes) {
             if(node.Name == name) {
@@ -43,10 +104,27 @@ class SCRIPTY_Graph {
     }
 
     function TriggerExecutionOutput(node, name) {
-        print("Triggering execution output '" .. name .. "' on node " .. node.Id);
+        // print("Triggering execution output '" .. name .. "' on node " .. node.Id);
 
         if(!node.Outputs[name])
             return;
+
+        // Queue if event
+        if(node.NodeTable.IsEvent) {
+            var event = {
+                Node = node,
+                Name = name,
+                Outputs = { },
+            };
+
+            foreach(var name, value in node.Context.Outputs) {
+                event.Outputs[name] = value;
+            }
+
+            this.EventQueue[#this.EventQueue + 1] = event;
+
+            return;
+        }
 
         foreach(var output in node.Outputs[name]) {
             var secondNode = this.NodesById[output.Id];
@@ -55,7 +133,9 @@ class SCRIPTY_Graph {
     }
 
     function TriggerExecutionInput(node, name) {
-        print("Triggering execution input '" .. name .. "' on node " .. node.Id);
+        coroutine.yield(SCRIPTY.GraphYield.Node);
+
+        // print("Triggering execution input '" .. name .. "' on node " .. node.Id);
 
         this.Executions++;
         
@@ -71,7 +151,7 @@ class SCRIPTY_Graph {
             return;
         context.LastExecution = this.Executions;
 
-        print("Updating node inputs on " .. node.Id);
+        // print("Updating node inputs on " .. node.Id);
 
         foreach(var key, input in node.Inputs) {
             var value;
@@ -103,6 +183,7 @@ class SCRIPTY_Graph {
                 Id = node.Id,
                 Name = node.Name,
                 Inputs = { },
+                Position = node.Position,
             };
 
             // Serialize inputs
@@ -139,6 +220,7 @@ class SCRIPTY_Graph {
                 Name = node.Name,
                 Inputs = table.Copy(node.Inputs),
                 Outputs = { },
+                Position = node.Position,
             };
 
             nodeTbl.NodeTable = SCRIPTY.Registry.NodesByName[nodeTbl.Name];
@@ -166,6 +248,11 @@ class SCRIPTY_Graph {
                 }
             }
         }
+    }
+
+    // Required to use this as a hook identifier.
+    function IsValid() {
+        return true;
     }
 }
 
@@ -259,6 +346,7 @@ function SCRIPTY.BuildGraph(nodePanels) {
             NodeTable = node.NodeTable,
             Inputs = { },
             Outputs = { },
+            Position = { node:GetPos() },
         };
 
         graph.Nodes[#graph.Nodes + 1] = nodeTbl;
