@@ -1,0 +1,23 @@
+SCRIPTY.Registry.RegisterNode({
+    Name = "Player/Groups/GetGroup",
+    Description = "Returns the group the player belongs to.",
+
+    Inputs = {
+        ["player"] = {
+            Name = "Player",
+            Type = "player",
+            Required = true,
+        },
+    },
+
+    Outputs = {
+        ["group"] = {
+            Name = "Group",
+            Type = "string",
+        }
+    },
+
+    Run = context => {
+        context:SetOutput("group", context:GetInput("player"):GetUserGroup());
+    },
+});

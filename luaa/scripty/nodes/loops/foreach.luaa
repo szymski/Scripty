@@ -27,6 +27,7 @@ SCRIPTY.Registry.RegisterNode({
                 var array = context:GetInput("array");
 
                 foreach(var key, value in array) {
+                    coroutine.yield(SCRIPTY.GraphYield.Node);
                     context:SetOutput("key", key);
                     context:SetOutput("value", value);
                     context:Trigger("iteration");

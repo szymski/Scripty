@@ -4,13 +4,15 @@ SCRIPTY.Networking = { };
     Run graph
 ------------------------------*/
 
-function SCRIPTY.Networking.RunGraph(graphName, graphTable) {
+function SCRIPTY.Networking.RunGraph(graphName, graphTable, breakpoints) {
     assert(graphName, "graphName is null.");
     assert(graphTable, "graphTable is null.");
+    assert(breakpoints, "breakpoints is null.");
 
     net.Start("scripty_rungraph");
     net.WriteString(graphName);
     net.WriteTable(graphTable);
+    net.WriteTable(breakpoints);
     net.SendToServer();
 }
 
@@ -41,3 +43,57 @@ net.Receive("scripty_ongraphstopped", function(len, ply) {
     var name = net.ReadString();
     SCRIPTY.GraphManager.OnServerGraphStopped(name);
 }); 
+
+/*---------------------------- 
+    Debugging
+------------------------------*/
+
+/*----------------------------
+    Breakpoint hit
+------------------------------*/
+
+net.Receive("scripty_debug_onbreakpointhit", function(len, ply) {
+    var name = net.ReadString();
+    var nodeId = net.ReadInt(32);
+
+    if(!IsValid(SCRIPTY_MainWindow))
+        return;
+
+    SCRIPTY_MainWindow:OnBreakpointHit(name, nodeId);
+}); 
+
+/*----------------------------
+    Resume
+------------------------------*/
+
+function SCRIPTY.Networking.ResumeGraph(graphName) {
+    assert(graphName, "graphName is null.");
+
+    net.Start("scripty_debug_resume");
+    net.WriteString(graphName);
+    net.SendToServer();
+}
+
+/*---------------------------- 
+    Single step
+------------------------------*/
+
+function SCRIPTY.Networking.DoSingleStep(graphName) {
+    assert(graphName, "graphName is null.");
+
+    net.Start("scripty_debug_singlestep");
+    net.WriteString(graphName);
+    net.SendToServer();
+}
+
+/*---------------------------- 
+    Pause
+------------------------------*/
+
+function SCRIPTY.Networking.Pause(graphName) {
+    assert(graphName, "graphName is null.");
+
+    net.Start("scripty_debug_pause");
+    net.WriteString(graphName);
+    net.SendToServer();
+}

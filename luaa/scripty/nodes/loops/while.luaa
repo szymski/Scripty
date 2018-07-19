@@ -18,6 +18,7 @@ SCRIPTY.Registry.RegisterNode({
                 var value = context:GetInput("value");
 
                 while(value) {
+                    coroutine.yield(SCRIPTY.GraphYield.Node);
                     context:Trigger("iteration");
                     value = context:GetInput("value");
                 }

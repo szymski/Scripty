@@ -8,14 +8,17 @@ util.AddNetworkString("scripty_rungraph");
 
 net.Receive("scripty_rungraph", function(len, ply) {
     print("Running graph from player " .. ply:Name());
+
     var name = net.ReadString();
     var graphTable = net.ReadTable();
+    var breakpoints = net.ReadTable();
     var graph = SCRIPTY_Graph();
     graph:Deserialize(graphTable);
 
     SCRIPTY.GraphManager.RunGraph({
         Name = name,
         Graph = graph,
+        Breakpoints = breakpoints,
     });
 });
 
@@ -55,3 +58,68 @@ function SCRIPTY.Networking.OnGraphStopped(graphName) {
     net.WriteString(graphName);
     net.Broadcast();
 }
+
+/*---------------------------- 
+    Debugging
+------------------------------*/
+
+/*---------------------------- 
+    Breakpoint hit
+------------------------------*/
+
+util.AddNetworkString("scripty_debug_onbreakpointhit");
+
+function SCRIPTY.Networking.OnBreakpointHit(graphName, nodeId) {
+    assert(graphName, "graphName is null.");
+    assert(nodeId, "nodeId is null.");
+
+    net.Start("scripty_debug_onbreakpointhit");
+    net.WriteString(graphName);
+    net.WriteInt(nodeId, 32);
+    net.Broadcast();
+}
+
+/*---------------------------- 
+    Resume
+------------------------------*/
+
+util.AddNetworkString("scripty_debug_resume");
+
+net.Receive("scripty_debug_resume", function(len, ply) {
+    var name = net.ReadString();
+    print("Client requested to resume graph " .. name);
+
+    var graph = SCRIPTY.GraphManager.RunningGraphs[name];
+    if(graph)
+        graph.Graph:Resume();
+});
+
+/*---------------------------- 
+    Single step
+------------------------------*/
+
+util.AddNetworkString("scripty_debug_singlestep");
+
+net.Receive("scripty_debug_singlestep", function(len, ply) {
+    var name = net.ReadString();
+    print("Client requested a single step in graph " .. name);
+
+    var graph = SCRIPTY.GraphManager.RunningGraphs[name];
+    if(graph)
+        graph.Graph:DoSingleStep();
+});
+
+/*---------------------------- 
+    Pause
+------------------------------*/
+
+util.AddNetworkString("scripty_debug_pause");
+
+net.Receive("scripty_debug_pause", function(len, ply) {
+    var name = net.ReadString();
+    print("Client requested to pause graph " .. name);
+
+    var graph = SCRIPTY.GraphManager.RunningGraphs[name];
+    if(graph)
+        graph.Graph:Pause();
+});

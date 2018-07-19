@@ -1,6 +1,7 @@
 SCRIPTY.GraphYield = {
     Node = 1,
     WaitForEvent = 2,
+    Breakpoint = 3,
 };
 
 /**
@@ -11,14 +12,24 @@ class SCRIPTY_Graph {
     var NodesById = { };
     var Name = "";
     var Coroutine;
+    var Paused = false;
+    /// A table, where keys are ids of the nodes.
+    var Breakpoints = { };
+    /// For single step debugging.
+    var BreakOnNext = false;
 
     /// Number of executable node executions. Used to cache the values.
     var Executions = 0;
 
     var EventQueue = { };
 
+    /// The node on which the breakpoint was hit.
+    var CurrentNode;
+
     function Run() {
         print("Running graph");
+
+        this.Paused = false;
 
         this.Coroutine = coroutine.create(function() {
             this:CoroutineFunc();
@@ -33,7 +44,7 @@ class SCRIPTY_Graph {
             var startTime = SysTime();
             var tickInterval = engine.TickInterval();
 
-            while(keepRunning) {
+            while(!this.Paused && keepRunning) {
                 var elapsed = SysTime() - startTime;
 
                 if(elapsed > tickInterval * ScriptyConfig.MaxCpuUsage)
@@ -46,7 +57,13 @@ class SCRIPTY_Graph {
                     keepRunning = false;
                 }
                 else {
-                    if(param == SCRIPTY.GraphYield.Node)
+                    if(param == SCRIPTY.GraphYield.Breakpoint) {
+                        print("Breakpoint hit");
+                        SCRIPTY.Networking.OnBreakpointHit(this.Name, this.CurrentNode.Id);
+                        this.Paused = true;
+                        keepRunning = false;
+                    }
+                    else if(param == SCRIPTY.GraphYield.Node)
                         keepRunning = true;
                     else
                         keepRunning = false;
@@ -62,6 +79,21 @@ class SCRIPTY_Graph {
             if(node.NodeTable.OnStop)
                 node.NodeTable.OnStop(node.Context);
         }
+    }
+
+    function Resume() {
+        print("Resuming graph");
+        this.BreakOnNext = false;
+        this.Paused = false;
+    }
+
+    function Pause() {
+        this.BreakOnNext = true;
+    }
+
+    function DoSingleStep() {
+        this.BreakOnNext = true;
+        this.Paused = false;
     }
 
     function InitContexts() {
@@ -140,6 +172,13 @@ class SCRIPTY_Graph {
         this.Executions++;
         
         this:UpdateNodeInputs(node);
+
+        if(this.Breakpoints[node.Id] || this.BreakOnNext) {
+            this.BreakOnNext = false;
+            this.CurrentNode = node;
+            coroutine.yield(SCRIPTY.GraphYield.Breakpoint);
+        }
+
         node.NodeTable.InTriggers[name].Action(node.Context);
     }
 
@@ -321,7 +360,6 @@ if(CLIENT)
 function SCRIPTY.BuildGraph(nodePanels) {
     var graph = SCRIPTY_Graph();
 
-    var lastId = 0;
     var panelIdLookup = { };
     var panelsById = { };
 
@@ -329,8 +367,8 @@ function SCRIPTY.BuildGraph(nodePanels) {
 
     foreach(var node in nodePanels) {
         if(!panelIdLookup[node]) {
-            panelIdLookup[node] = ++lastId;
-            panelsById[lastId] = node;
+            panelIdLookup[node] = node.Id;
+            panelsById[node.Id] = node;
         }
     }
 

@@ -4,6 +4,8 @@ class SCRIPTY_GUI_Node {
     var InputsPanel;
     var OutputsPanel;
     var Selected = false;
+    var Breakpoint = false;
+    var BreakpointHit = false;
 
     var NodeTable;
 
@@ -68,8 +70,15 @@ class SCRIPTY_GUI_Node {
         this.TitleBar = this:Add("DPanel");
         this.TitleBar:Dock(TOP);
         this.TitleBar:SetHeight(16);
-        this.TitleBar.Paint = (self, w, h) => {
+        this.TitleBar.Paint = (_, w, h) => {
             surface.SetDrawColor(60, 60, 60);
+
+            if(this.Breakpoint)
+                surface.SetDrawColor(90, 30, 30, 240);
+
+            if(this.BreakpointHit)
+                surface.SetDrawColor(10, 70, 10, 240);
+
             surface.DrawRect(0, 0, w, h);
         };
 
@@ -178,14 +187,29 @@ class SCRIPTY_GUI_Node {
 
         surface.SetDrawColor(30, 30, 30, 240);
 
-        if(this.Selected)
-            surface.SetDrawColor(40, 40, 40);
+        if(this.Breakpoint)
+            surface.SetDrawColor(120, 30, 30, 240);
+
+        if(this.BreakpointHit)
+            surface.SetDrawColor(10, 100, 10, 240);
 
         surface.DrawRect(0, 0, w, h);
+
+        if(this.Selected) {
+            surface.SetDrawColor(255, 255, 255, 3);
+            surface.DrawRect(0, 0, w, h);
+        }
     }
 
     function PaintOver(w, h) {
         surface.SetDrawColor(80, 80, 80);
+
+        if(this.Breakpoint)
+            surface.SetDrawColor(150, 30, 30, 240);
+
+        if(this.BreakpointHit)
+            surface.SetDrawColor(10, 120, 10, 240);
+
         surface.DrawOutlinedRect(0, 0, w, h);
     }
 
@@ -201,6 +225,17 @@ class SCRIPTY_GUI_Node {
     function OpenContextMenu() {
         var menu = vgui.Create("DMenu");
         
+        if(!this.Breakpoint)
+            menu:AddOption("Enable breakpoint", function() {
+                this.Breakpoint = true;
+                this.VisualTree:SetBreakpoint(this, true);
+            }):SetIcon("icon16/flag_red.png");
+        else
+            menu:AddOption("Disable breakpoint", function() {
+                this.Breakpoint = false;
+                this.VisualTree:SetBreakpoint(this, false);
+            }):SetIcon("icon16/flag_green.png");
+
         menu:AddOption("Remove", function() {
             this.VisualTree:RemoveNode(this);
         }):SetIcon("icon16/delete.png");

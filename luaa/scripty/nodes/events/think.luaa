@@ -1,5 +1,5 @@
 SCRIPTY.Registry.RegisterNode({
-    Name = "Events/Think",
+    Name = "Events/OnThink",
     Description = "Called every frame.",
 
     IsEvent = true,

@@ -32,6 +32,8 @@ function SCRIPTY.GraphManager.RunGraph(graphTable) {
         StartTime = CurTime(),
     };
 
+    graphTable.Graph.Breakpoints = graphTable.Breakpoints ?? { };
+
     SCRIPTY.GraphManager.RunningGraphs[graphTable.Name].Graph.Name = graphTable.Name;
     SCRIPTY.GraphManager.RunningGraphs[graphTable.Name].Graph:Run();
 

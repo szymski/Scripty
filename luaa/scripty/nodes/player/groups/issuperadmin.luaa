@@ -1,0 +1,23 @@
+SCRIPTY.Registry.RegisterNode({
+    Name = "Player/Groups/IsSuperAdmin",
+    Description = "Returns whether the player is of group superadmin.",
+
+    Inputs = {
+        ["player"] = {
+            Name = "Player",
+            Type = "player",
+            Required = true,
+        },
+    },
+
+    Outputs = {
+        ["out"] = {
+            Name = "Out",
+            Type = "bool",
+        }
+    },
+
+    Run = context => {
+        context:SetOutput("out", context:GetInput("player"):IsSuperAdmin());
+    },
+});

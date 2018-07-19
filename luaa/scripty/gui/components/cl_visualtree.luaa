@@ -4,12 +4,15 @@ class SCRIPTY_GUI_VisualTree {
     var MainWindow;
 
     var Nodes = { };
+    var Breakpoints = { };
 
     var Offset = { 0, 0 };
     var Zoom = 1;
 
     var Dragging;
     var InitialOffset;
+    
+    var LastNodeId = 0;
 
     function Init() {  
         this:__this();
@@ -27,8 +30,6 @@ class SCRIPTY_GUI_VisualTree {
         var node3 = this:AddNode("Debug/Print");
         node3:SetPos(550, 150);
 
-        var node4 = this:AddNode("Number 5");
-        node4:SetPos(50, 300);
 
         node3:GetInput("run"):Connect(node1:GetOutput("triggered"));
         node3:GetInput("value"):Connect(node2:GetOutput("out"));
@@ -44,16 +45,20 @@ class SCRIPTY_GUI_VisualTree {
             node:Remove();
 
         this.Nodes = { };
+        this.Breakpoints = { };
         this:EndConnect();
         this:EndNodeDrag();
         
         this.MainWindow.PropertyView:SelectNode(null);
+
+        this.LastNodeId = 0;
     }
 
     function AddNode(name) {
         assert(name, "name is null.");
 
         var node = vgui.Create("SCRIPTY_GUI_Node");
+        node.Id = ++this.LastNodeId;
         node:Setup(this, name);
         node:SetPaintedManually(true);
         node:SetSize(200, 100);
@@ -489,6 +494,25 @@ class SCRIPTY_GUI_VisualTree {
         table.RemoveByValue(this.Nodes, node);
 
         this.MainWindow.PropertyView:SelectNode(null);
+    }
+
+    function SetBreakpoint(node, enabled) {
+        if(enabled)
+            this.Breakpoints[node.Id] = true;
+        else
+            this.Breakpoints[node.Id] = null;
+    }
+
+    function OnBreakpointHit(graphName, nodeId) {
+        if(graphName == this.MainWindow.TestGraphName) {
+            foreach(var node in this.Nodes)
+                node.BreakpointHit = node.Id == nodeId;
+        }
+    }
+    
+    function ClearBreakpointHits() {
+        foreach(var node in this.Nodes)
+            node.BreakpointHit = false;
     }
 
     /*---------------------------- 
