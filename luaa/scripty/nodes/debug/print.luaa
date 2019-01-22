@@ -13,7 +13,14 @@ SCRIPTY.Registry.RegisterNode({
         ["run"] = {
             Name = "Run",
             Action = context => {
-                print(context:GetInput("value"));
+                var message = tostring(context:GetInput("value"));
+                print("[SCRIPTY][" .. context.Graph.Name .. "] " .. message);
+
+                net.Start("scripty_node_print");
+                net.WriteString(context.Graph.Name);
+                net.WriteString(message);
+                net.Broadcast();
+
                 context:Trigger("done");
             }
         }
@@ -25,3 +32,14 @@ SCRIPTY.Registry.RegisterNode({
         }
     }
 });
+
+if(SERVER)
+    util.AddNetworkString("scripty_node_print");
+
+if(CLIENT)
+    net.Receive("scripty_node_print", function(len, ply) {
+        var name = net.ReadString();
+        var message = net.ReadString();
+
+        hook.Call("SCRIPTY_Node_Print", null, name, message);
+    });

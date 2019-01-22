@@ -19,5 +19,7 @@
 	"docs_dir": "../docs/",
 	"includes": [
 		"scripty/global.luaa",
-	]
+	],
+
+	"obfuscate": false,
 }

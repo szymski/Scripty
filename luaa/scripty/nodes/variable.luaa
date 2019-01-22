@@ -1,0 +1,50 @@
+SCRIPTY.Registry.RegisterNode({
+    Name = "Variable",
+    Description = "A node which can have its value modified during execution.",
+
+    Inputs = {
+        ["value"] = {
+            Name = "Initial value",
+            Type = "any",
+            Z = 0,
+        },
+        ["newvalue"] = {
+            Name = "New Value",
+            Type = "any",
+            Z = 1,
+        },
+    },
+
+    InTriggers = {
+        ["run"] = {
+            Name = "Set",
+            Z = 2,
+            Action = context => {
+                context:SetOutput("out", context:GetInput("newvalue"));
+                context.Value = context:GetInput("newvalue");
+                context:Trigger("done");
+            },
+        }
+    },
+
+    OutTriggers = {
+        ["done"] = {
+            Name = "Done",
+        }
+    },
+
+    Outputs = {
+        ["out"] = {
+            Name = "Out",
+            Type = "any",
+        },
+    },
+
+    Run = context => {
+        context:SetOutput("out", context.Value ?? context:GetInput("value"));
+    },
+
+    Init = context => {
+        context:SetOutput("out", context:GetInput("value"));
+    },
+});

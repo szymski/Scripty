@@ -55,6 +55,7 @@ class SCRIPTY_Graph {
                 if(!success) {
                     print("Execution error: " .. param);
                     keepRunning = false;
+                    this.Paused = true;
                 }
                 else {
                     if(param == SCRIPTY.GraphYield.Breakpoint) {
@@ -190,6 +191,20 @@ class SCRIPTY_Graph {
             return;
         context.LastExecution = this.Executions;
 
+        if(!context.Initialized && node.NodeTable.Init) {
+            foreach(var key, input in node.Inputs) {
+                var value;
+                
+                if(!input.Id) {
+                    value = input.Value;
+                    context:SetInput(key, value);
+                }
+            }
+
+            node.NodeTable.Init(context);
+        }
+        context.Initialized = true;
+
         // print("Updating node inputs on " .. node.Id);
 
         foreach(var key, input in node.Inputs) {
@@ -206,7 +221,7 @@ class SCRIPTY_Graph {
             context:SetInput(key, value);
         }
 
-        if((!node.NodeTable.InTriggers || #node.NodeTable.InTriggers == 0) && node.NodeTable.Run) {
+        if(/*(!node.NodeTable.InTriggers || #node.NodeTable.InTriggers == 0) &&*/ node.NodeTable.Run) {
             node.NodeTable.Run(node.Context);
         }
     }

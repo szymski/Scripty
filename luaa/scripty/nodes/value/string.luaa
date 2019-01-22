@@ -1,0 +1,23 @@
+SCRIPTY.Registry.RegisterNode({
+    Name = "Value/String",
+    Description = "Text value",
+
+    Inputs = {
+        ["value"] = {
+            Name = "A",
+            Type = "string",
+            Required = true,
+        },
+    },
+
+    Outputs = {
+        ["out"] = {
+            Name = "Out",
+            Type = "string",
+        },
+    },
+
+    Run = context => {
+        context:SetOutput("out", context:GetInput("value"));
+    },
+});

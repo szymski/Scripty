@@ -18,6 +18,7 @@ class SCRIPTY_GUI_MainWindow {
         this:RebuildMenuBar();
         this:RegisterMenuHooks();
         this:AddVisualTree();
+        this:AddConsole();
         this:AddPropertyView();
     }
 
@@ -28,6 +29,7 @@ class SCRIPTY_GUI_MainWindow {
     function SetScaleAndPosition() { 
         this:SetSize(1200, 800);
         this:Center();
+        this:SetSizable(true);
     }
 
     function AddMenuWrapper() {
@@ -59,27 +61,31 @@ class SCRIPTY_GUI_MainWindow {
                 var serialized = graph:Serialize();
                 print("Sending to server");
                 var breakpoints = this.VisualTree.Breakpoints;
+                // this:LogInfo("Running graph " .. this.TestGraphName);
                 SCRIPTY.Networking.RunGraph(this.TestGraphName, serialized, breakpoints);
             }):SetTooltip("Starts the graph on the server.");
         }
         else {
             this:AddDebugButton("icon16/control_stop.png", function() {
-                print("Requesting server to stop the graph");
+                // this:LogInfo("Stopping graph " .. this.TestGraphName);
                 SCRIPTY.Networking.StopGraph(this.TestGraphName);
             }):SetTooltip("Stops the graph completly.");
 
             if(this.Paused)
                 this:AddDebugButton("icon16/control_play.png", function() {
                     this:OnGraphResumed(this.TestGraphName);
+                    this:LogInfo("Resuming graph " .. this.TestGraphName);
                     SCRIPTY.Networking.ResumeGraph(this.TestGraphName);
                 }):SetTooltip("Resumes the graph.");
             else
                 this:AddDebugButton("icon16/control_pause.png", function() {
+                    this:LogInfo("Pausing graph " .. this.TestGraphName);
                     SCRIPTY.Networking.Pause(this.TestGraphName);
                 }):SetTooltip("Pauses the graph.");
 
             if(this.Paused)
                 this:AddDebugButton("icon16/arrow_right.png", function() {
+                    this:LogInfo("Doing a single step in graph " .. this.TestGraphName);
                     this:OnGraphResumed(this.TestGraphName);
                     SCRIPTY.Networking.DoSingleStep(this.TestGraphName);
                 }):SetTooltip("Single step.");
@@ -94,7 +100,7 @@ class SCRIPTY_GUI_MainWindow {
         runButton:SetIcon(icon);
         function runButton:Paint(w, h) {
             if(this:IsDown()) {
-               surface.SetDrawColor(0, 0, 0, 150);
+                surface.SetDrawColor(0, 0, 0, 150);
                 surface.DrawRect(0, 0, w, h); 
             }
             else if(this:IsHovered()) {
@@ -121,6 +127,7 @@ class SCRIPTY_GUI_MainWindow {
 
         scriptMenu:AddOption("New script", function() {
             this.VisualTree:Clear();
+            this:LogInfo("Creating new script");
         }):SetIcon("icon16/page_add.png");
 
         // Debug menu
@@ -156,6 +163,26 @@ class SCRIPTY_GUI_MainWindow {
                 SCRIPTY.Networking.StopGraph(this.TestGraphName);
             }):SetIcon("icon16/control_stop.png");
         }
+
+        // Console menu
+
+        var consoleMenu = this.MenuBar:AddMenu("Console");
+
+        consoleMenu:AddOption("Clear", function() {
+            this:ClearConsole();
+        });
+
+        // Test menu
+
+        var scriptMenu = this.MenuBar:AddMenu("Test");
+
+        scriptMenu:AddOption("Save", function() {
+            this:SaveToFile("graph.txt");
+        });
+
+        scriptMenu:AddOption("Load", function() {
+            this:LogWarning("Not implemented");
+        });
     }
 
     function RegisterMenuHooks() {
@@ -163,6 +190,7 @@ class SCRIPTY_GUI_MainWindow {
             if(name == this.TestGraphName) {
                 this.Paused = false;
                 this.VisualTree:ClearBreakpointHits();
+                this:LogInfo("Graph " .. name .. " started");
             }
 
             this:RebuildMenuBar();
@@ -173,8 +201,10 @@ class SCRIPTY_GUI_MainWindow {
             this:RebuildMenuBar();
             this:RebuildDebugPanel();
 
-            if(name == this.TestGraphName)
+            if(name == this.TestGraphName) {
                 this.VisualTree:ClearBreakpointHits();
+                this:LogInfo("Graph " .. name .. " stopped");
+            }
         });
     }
 
@@ -189,6 +219,41 @@ class SCRIPTY_GUI_MainWindow {
         this.PropertyView = this:Add("SCRIPTY_GUI_PropertyView");
         this.PropertyView:Dock(RIGHT);
         this.PropertyView:SetWidth(300);
+    }
+
+    function SaveToFile(filename) {
+        var graph = this.VisualTree:BuildExecutableGraph();
+        var serialized = util.TableToJSON(graph:Serialize());
+
+        if(!file.Exists("scripty_graphs", "DATA"))
+            file.CreateDir("scripty_graphs");
+
+        var path = "scripty_graphs/" .. filename;
+
+        file.Write(path, serialized);
+        this:LogInfo("Graph saved to " .. path);
+    }
+
+    function AddConsole() {
+        this.Console = this:Add("DPanel");
+        this.Console:Dock(BOTTOM);
+        this.Console:SetHeight(200);
+        function this.Console:Paint(w, h) {
+            surface.SetDrawColor(Color(100, 100, 100));
+            surface.DrawRect(0, 0, w, h);
+
+            surface.SetDrawColor(Color(40, 40, 40));
+            surface.DrawRect(0, 4, w, h - 4);
+        }
+
+        this.Console.Text = this.Console:Add("RichText");
+        this.Console.Text:DockMargin(2, 8, 2, 8);
+        this.Console.Text:Dock(FILL);
+
+        hook.Add("SCRIPTY_Node_Print", "SCRIPTY_Editor_Node_Print", function(name, msg) {
+            if(name == this.TestGraphName)
+                this:LogInfo(msg);
+        });
     }
 
     /*---------------------------- 
@@ -214,6 +279,36 @@ class SCRIPTY_GUI_MainWindow {
 
             this.VisualTree:ClearBreakpointHits();
         }
+    }
+
+    /*---------------------------- 
+        Logging
+    ------------------------------*/
+
+    function ClearConsole() {
+        this.Console.Text:SetText("");
+    }
+
+    function GetDateString() {
+        return "[" .. os.date("%H:%M:%S", os.time()) .. "]";
+    }
+
+    function LogInfo(line) {
+        this.Console.Text:InsertColorChange(230, 230, 230, 255);
+        this.Console.Text:AppendText(this:GetDateString() .. " " .. line .. "\n");
+        MsgC(Color(230, 230, 230), "[SCRIPTY]" .. this:GetDateString() .. " " .. line .. "\n");
+    }
+
+    function LogWarning(line) {
+        this.Console.Text:InsertColorChange(230, 230, 80, 255);
+        this.Console.Text:AppendText(this:GetDateString() .. " " .. line .. "\n");
+        MsgC(Color(230, 230, 80), "[SCRIPTY]" .. this:GetDateString() .. " " .. line .. "\n");
+    }
+
+    function LogError(line) {
+        this.Console.Text:InsertColorChange(230, 60, 30, 255);
+        this.Console.Text:AppendText(this:GetDateString() .. " " .. line .. "\n");
+        MsgC(Color(230, 60, 30), "[SCRIPTY]" .. this:GetDateString() .. " " .. line .. "\n");
     }
 }
 

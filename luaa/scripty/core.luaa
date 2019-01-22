@@ -10,7 +10,7 @@ SCRIPTY = SCRIPTY ?? { };
 ------------------------------*/ 
 
 if(SERVER) {
-	CreateConVar("scripty_ver", 1, FCVAR_NOTIFY);
+CreateConVar("scripty_ver", 1, FCVAR_NOTIFY);
 
 	SLib.Util.RegisterPurchaser("Scripty", "{{ user_id }}");
 
